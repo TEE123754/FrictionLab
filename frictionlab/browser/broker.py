@@ -167,15 +167,14 @@ class BrowserBroker:
         self.stage = "owned fixture startup"
         await self.runtime.start()
         self.stage = "local browser executable lookup"
-        self.browser_path = Path(
-            os.environ.get(
-                "FRICTIONLAB_BROWSER_PATH", r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-            )
-        )
-        if not self.browser_path.is_file():
+        from frictionlab.assessment.render import browser_path
+
+        installed_browser = browser_path()
+        if not installed_browser:
             raise FileNotFoundError(
                 "Configure a locally installed Chromium browser; no automatic download occurs"
             )
+        self.browser_path = Path(installed_browser)
         profiles = ROOT / ".runtime" / "browsers"
         profiles.mkdir(parents=True, exist_ok=True)
         self.profile = tempfile.TemporaryDirectory(prefix="phase2-", dir=profiles)

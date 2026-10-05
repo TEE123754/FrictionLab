@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
+from frictionlab.agent_workspace import AgentRequest, AgentWorkspace
 from frictionlab.assessment.models import AssessmentRequest
 from frictionlab.assessment.report import export_zip
 from frictionlab.assessment.service import Assessments, read_settings, save_settings
@@ -54,14 +55,17 @@ def create_app(root, port, *, token=None):
     token = token or secrets.token_urlsafe(32)
     root = Path(root)
     service = Assessments(root)
+    agents = AgentWorkspace(root)
 
     @asynccontextmanager
     async def lifespan(app):
         yield
         await service.close()
+        await agents.close()
 
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.assessments = service
+    app.state.agents = agents
     app.state.token = token
     authorities = {f"127.0.0.1:{port}", f"localhost:{port}"}
     origins = {"http://" + a for a in authorities}
@@ -146,6 +150,70 @@ def create_app(root, port, *, token=None):
     def configure(value: Connection):
         connect(root, value)
         return {"connected": True, "storage": "native_os" if value.remember else "process_memory"}
+
+    @app.get("/api/agents/readiness")
+    def agent_readiness():
+        return agents.readiness()
+
+    @app.post("/api/agents", status_code=202)
+    def start_agent(value: AgentRequest):
+        return {"id": agents.submit(value)}
+
+    @app.get("/api/agents")
+    def agent_history():
+        return agents.list()
+
+    def existing_agent(id):
+        try:
+            if not agents.path(id).is_dir():
+                raise ValueError()
+        except ValueError:
+            raise HTTPException(404, "Agent run not found") from None
+
+    @app.get("/api/agents/{id}")
+    def agent_status(id: str):
+        existing_agent(id)
+        return agents.status(id)
+
+    @app.post("/api/agents/{id}/cancel")
+    def cancel_agent(id: str):
+        existing_agent(id)
+        agents.cancel(id)
+        return {"cancellation_requested": True}
+
+    @app.get("/api/agents/{id}/report")
+    def agent_report(id: str):
+        existing_agent(id)
+        if not (agents.path(id) / "report.json").is_file():
+            raise HTTPException(409, "Agent report is not ready")
+        return agents.report(id)
+
+    @app.get("/api/agents/{id}/export/{format}")
+    def export_agent(id: str, format: str):
+        existing_agent(id)
+        if format not in {"json", "md", "html", "zip"}:
+            raise HTTPException(404)
+        if not (agents.path(id) / "report.json").is_file():
+            raise HTTPException(409, "Agent report is not ready")
+        data = (
+            agents.export_zip(id)
+            if format == "zip"
+            else (agents.path(id) / ("report." + format)).read_bytes()
+        )
+        return Response(
+            data,
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f'attachment; filename="frictionlab-agent-{id}.{format}"'},
+        )
+
+    @app.get("/api/agents/{id}/evidence/{name:path}")
+    def agent_evidence(id: str, name: str):
+        existing_agent(id)
+        try:
+            path = agents.evidence_path(id, name)
+        except (OSError, ValueError, KeyError):
+            raise HTTPException(404, "Evidence not found") from None
+        return Response(path.read_bytes(), media_type="image/png")
 
     @app.post("/api/assessments", status_code=202)
     async def start(value: AssessmentRequest):

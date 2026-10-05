@@ -24,6 +24,7 @@ uv run frictionlab start
 ```
 
 The CLI opens a localhost dashboard. Paste a URL, choose an evidence source, select individual checks or all six categories, and start. Connect your own Groq, Gemini or Morpheus key in the dashboard if you want AI recommendations. Core structural checks work without a key. No models or browsers download automatically.
+The current development branch also has a **synthetic browser-agent** panel in the same dashboard and desktop-launched workspace. Select a persona, fixture goal and seeded UI variant, then set an AI request/time cap. This agent runs only against the bundled disposable storefront. A provider connection alone does not verify that the selected model can produce valid browser actions; planner faults become partial reports, not UX abandonment. The public v0.1.0 download predates this panel.
 Morpheus is also supported with a separate paid-credit acknowledgement and an ignored local `.env` option. See the [local replica and provider guide](docs/phase15-16-local.md); do not commit or share API keys.
 For a minimal first-run check, use `uv run frictionlab doctor --assessment-only`. The [local pilot and release-readiness guide](docs/phase17-release-readiness.md) explains installation, evidence interpretation, partial reports and upgrade steps.
 
@@ -33,7 +34,7 @@ For the native desktop launcher:
 uv run frictionlab desktop
 ```
 
-The native window provides masked key setup and start/open/stop controls for the same local assessment workspace. Optional remembering uses your OS credential store; session-only keys never become plaintext files. The [Windows portable ZIP](https://github.com/TEE123754/Agentic/releases/download/v0.1.0/FrictionLab-windows-x64.zip) contains the desktop app. Read the [setup, safety and category coverage guide](docs/local-assessment.md) before running it.
+The native window provides masked key setup and start/open/stop controls for the same local workspace. Optional remembering uses your OS credential store; session-only keys never become plaintext files. The [Windows portable ZIP](https://github.com/TEE123754/Agentic/releases/download/v0.1.0/FrictionLab-windows-x64.zip) contains the earlier desktop build. Read the [setup, safety and category coverage guide](docs/local-assessment.md) before running it.
 
 ## What you receive
 
@@ -61,7 +62,7 @@ Public HTML capture is a separate, explicitly approved one-GET operation, withou
 
 Unsupported work is explicitly skipped. An unavailable browser or interrupted check is incomplete. Scores do not count unknown checks as passing and are not production readiness or security certification.
 
-Autonomous browser execution still accepts **bundled disposable fixtures only**; arbitrary deployed/staging application workflows remain blocked until a separate backend/data/integration boundary is verified. FrictionLab provides advice and does not modify application source or deploy fixes. Local report review does not contact the tested website. Screenshot pixels can contain supplied content: review exports before sharing.
+Autonomous browser execution still accepts **bundled disposable fixtures only**; arbitrary deployed/staging application workflows remain blocked until a separate backend/data/integration boundary is verified. In the development branch, a missing browser or planner produces a blocked agent report without target contact, and Morpheus needs a separate acknowledgement for each run. FrictionLab provides advice and does not modify application source or deploy fixes. Local report review does not contact the tested website. Screenshot pixels can contain supplied content: review exports before sharing.
 
 ## Existing behavioral cohort workflow
 
