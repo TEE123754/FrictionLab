@@ -8,9 +8,9 @@ on:
         options: [all, linux, windows]
         default: all
       affected:
-        description: Initial full phase batch or affected UI repair
+        description: Initial full phase batch or affected follow-up
         type: choice
-        options: [all, dashboard]
+        options: [all, dashboard, phase17]
         default: all
 permissions:
   contents: read
@@ -46,6 +46,8 @@ jobs:
           mkdir -p artifacts/local-workspace
           if [ "${{ inputs.affected }}" = dashboard ]; then
             .venv/bin/python -m pytest -q tests/phase_12/test_assessment.py::test_real_offline_browser_and_dashboard tests/phase_12/test_assessment.py::test_renderer_deadline_preserves_partial_checks tests/phase_12/test_assessment.py::test_ai_fault_keeps_measured_findings --junitxml=artifacts/local-workspace/affected.xml
+          elif [ "${{ inputs.affected }}" = phase17 ]; then
+            .venv/bin/python -m pytest -q tests/phase_17 --junitxml=artifacts/local-workspace/affected.xml
           else
             .venv/bin/python -m pytest -q tests/phase_10 tests/phase_12 tests/phase_15 tests/phase_16 tests/phase_17 --junitxml=artifacts/local-workspace/acceptance.xml
           fi

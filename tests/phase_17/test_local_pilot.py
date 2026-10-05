@@ -68,7 +68,12 @@ def test_three_offline_pilots_report_evidence_and_zero_contact(tmp_path):
                 reports[name] = report
                 assert report["execution_status"] == "completed"
                 assert report["acquisition"]["target_requests"] == 0
-                assert report["summary"]["incomplete"] == 0
+                incomplete_ids = {
+                    check["id"] for check in report["checks"] if check["status"] == "incomplete"
+                }
+                # axe-core can require manual review even when its scan completes.
+                assert incomplete_ids <= {"accessibility.axe"}
+                assert not any(check["id"].endswith(".renderer") for check in report["checks"])
                 assert len(report["evidence_files"]) == 3
                 assert set(report["summary"]) == {"passed", "failed", "skipped", "incomplete"}
                 assert set(report["scores"]["categories"]) == set(CATEGORIES)
