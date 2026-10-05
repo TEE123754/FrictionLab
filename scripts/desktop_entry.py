@@ -7,7 +7,7 @@ from pathlib import Path
 from frictionlab.desktop import main
 
 if __name__ == "__main__":
-    if any(flag in sys.argv for flag in ("--self-check", "--serve-smoke")):
+    if any(flag in sys.argv for flag in ("--self-check", "--serve-smoke", "--agent-smoke")):
         try:
             result = main()
         except Exception as exc:  # noqa: BLE001 - Exit smoke mode without a blocking native error dialog.

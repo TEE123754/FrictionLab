@@ -8,6 +8,10 @@ from pathlib import Path
 
 
 def main():
+    if "--agent-smoke" in sys.argv:
+        from frictionlab.desktop_acceptance import agent_smoke
+
+        return agent_smoke()
     if "--serve-smoke" in sys.argv:
         from frictionlab.desktop_acceptance import smoke
 

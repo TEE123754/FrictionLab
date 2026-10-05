@@ -156,7 +156,7 @@ def create_app(root, port, *, token=None):
         return agents.readiness()
 
     @app.post("/api/agents", status_code=202)
-    def start_agent(value: AgentRequest):
+    async def start_agent(value: AgentRequest):
         return {"id": agents.submit(value)}
 
     @app.get("/api/agents")
@@ -176,7 +176,7 @@ def create_app(root, port, *, token=None):
         return agents.status(id)
 
     @app.post("/api/agents/{id}/cancel")
-    def cancel_agent(id: str):
+    async def cancel_agent(id: str):
         existing_agent(id)
         agents.cancel(id)
         return {"cancellation_requested": True}

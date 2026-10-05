@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import zipfile
 from io import BytesIO
+from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
 
@@ -16,6 +18,17 @@ from frictionlab.agent_workspace import AgentRequest, AgentWorkspace
 from frictionlab.app import create_app
 from frictionlab.planning.inference import InferenceSettings
 from frictionlab.reporting import unexecuted_report, write_report
+
+
+def test_real_fixture_agents_through_dashboard_api(tmp_path):
+    from frictionlab.desktop_acceptance import agent_smoke
+
+    root = Path(os.environ.get("FRICTIONLAB_PHASE17_EVIDENCE", tmp_path)) / "agent-workflow"
+    assert agent_smoke(root) == 0
+    receipt = json.loads((root / "acceptance.json").read_text(encoding="utf-8"))
+    assert receipt["paid_requests"] == 0
+    assert receipt["results"]["healthy"]["outcome"] == "completed"
+    assert receipt["results"]["dead_button"]["outcome"] == "abandoned_patience"
 
 
 def settings():

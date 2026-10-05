@@ -14,6 +14,7 @@ with tempfile.TemporaryDirectory() as temporary:
     with zipfile.ZipFile(root / "dist/FrictionLab-windows-x64.zip") as archive:
         names = archive.namelist()
         assert any(n.endswith("frictionlab/web/index.html") for n in names)
+        assert any(n.endswith("frictionlab/fixtures/web/app.js") for n in names)
         axe_path = next(n for n in names if n.endswith("vendor/axe-core/axe.min.js"))
         manifest_path = next(n for n in names if n.endswith("configs/axe-manifest.json"))
         manifest = json.loads(archive.read(manifest_path))
@@ -22,9 +23,9 @@ with tempfile.TemporaryDirectory() as temporary:
         assert not any(n.endswith((".gguf", ".env", "app-settings.json")) for n in names)
         archive.extractall(destination)
     executable = destination / "FrictionLab/FrictionLab.exe"
-    for flag in ("--self-check", "--serve-smoke"):
+    for flag in ("--self-check", "--serve-smoke", "--agent-smoke"):
         try:
-            subprocess.run([str(executable), flag], cwd=destination, check=True, timeout=150)
+            subprocess.run([str(executable), flag], cwd=destination, check=True, timeout=330)
         finally:
             evidence = root / "artifacts/desktop"
             if (destination / "smoke-workspace").is_dir():
@@ -34,6 +35,11 @@ with tempfile.TemporaryDirectory() as temporary:
             if (destination / "packaged-failure.json").is_file():
                 shutil.copy2(
                     destination / "packaged-failure.json", evidence / "packaged-failure.json"
+                )
+            if (destination / "agent-smoke-workspace").is_dir():
+                shutil.copytree(
+                    destination / "agent-smoke-workspace", evidence / "packaged-agent-smoke",
+                    dirs_exist_ok=True,
                 )
     evidence = root / "artifacts/desktop"
     shutil.copytree(
@@ -45,6 +51,8 @@ with tempfile.TemporaryDirectory() as temporary:
                 "self_check": "passed",
                 "extracted_executable_local_dashboard": "passed",
                 "offline_browser_report": "passed",
+                "fixture_agent_api_browser_and_export": "passed; scripted provider only",
+                "paid_inference_requests": 0,
                 "target_requests": 0,
                 "models_bundled": False,
                 "keys_bundled": False,
