@@ -33,12 +33,14 @@ def main(argv=None):
     setup = commands.add_parser(
         "configure", help="Connect your own API key through a masked prompt"
     )
-    setup.add_argument("--provider", choices=("groq", "gemini"), required=True)
+    setup.add_argument("--provider", choices=("groq", "gemini", "morpheus"), required=True)
     setup.add_argument("--model", required=True)
     setup.add_argument("--workspace", type=Path)
     setup.add_argument("--session-only", action="store_true")
     setup.add_argument("--share-findings", action="store_true", required=True)
-    setup.add_argument("--free-tier-confirmed", action="store_true", required=True)
+    setup.add_argument("--free-tier-confirmed", action="store_true")
+    setup.add_argument("--billing-acknowledged", action="store_true")
+    setup.add_argument("--use-local-env", action="store_true")
     commands.add_parser("desktop", help="Open the native desktop launcher and key setup")
     init = commands.add_parser("init", help="Create a local workspace without downloads")
     init.add_argument("directory", type=Path)
@@ -46,6 +48,20 @@ def main(argv=None):
         "doctor", help="Offline setup checks; no browser or model launch"
     )
     diagnostic.add_argument("--inference-config", type=Path)
+    diagnostic.add_argument(
+        "--assessment-only",
+        action="store_true",
+        help="Check the simple local dashboard without requiring cohort model resources",
+    )
+    replica = commands.add_parser(
+        "replica-check", help="Inspect a local replica declaration without contacting its target"
+    )
+    replica.add_argument("manifest", type=Path)
+    probe = commands.add_parser(
+        "provider-check", help="Make one bounded Morpheus inference using a locally configured key"
+    )
+    probe.add_argument("--model", required=True)
+    probe.add_argument("--billing-acknowledged", action="store_true", required=True)
     cohort = commands.add_parser(
         "cohort", help="Run an owned-fixture cohort and generate a detailed audit"
     )
@@ -145,10 +161,12 @@ def main(argv=None):
                 Connection(
                     provider=args.provider,
                     model=args.model,
-                    key=getpass.getpass("Your API key (hidden): "),
-                    remember=not args.session_only,
+                    key="" if args.use_local_env else getpass.getpass("Your API key (hidden): "),
+                    remember=not args.session_only and not args.use_local_env,
                     share_findings=args.share_findings,
                     free_tier_confirmed=args.free_tier_confirmed,
+                    billing_acknowledged=args.billing_acknowledged,
+                    use_local_env=args.use_local_env,
                 ),
             )
         except Exception:  # noqa: BLE001 - Boundary faults must yield safe diagnostics, never raw secrets.
@@ -162,6 +180,8 @@ def main(argv=None):
             server = LocalServer(root)
             print("Dashboard: " + server.url, flush=True)
             server.run()
+        elif args.use_local_env:
+            print("Ignored local .env key selected. Run frictionlab start.")
         else:
             print("Key stored in native OS credential storage. Run frictionlab start.")
         return 0
@@ -204,7 +224,27 @@ def main(argv=None):
 
         result = doctor(args.inference_config)
         print(json.dumps(result, indent=2))
-        return 0 if result["ready_for_audit"] else 2
+        return 0 if result["ready_for_assessment" if args.assessment_only else "ready_for_audit"] else 2
+    if args.command == "replica-check":
+        from frictionlab.replica_preflight import inspect_declaration
+
+        try:
+            result = inspect_declaration(args.manifest)
+        except (OSError, ValueError):
+            result = {
+                "execution_enabled": False,
+                "target_requests": 0,
+                "scope": "preparation_only",
+                "gaps": ["Replica declaration is missing or invalid"],
+            }
+        print(json.dumps(result, indent=2))
+        return 2
+    if args.command == "provider-check":
+        from frictionlab.product import provider_check
+
+        result = asyncio.run(provider_check(args.model))
+        print(json.dumps(result))
+        return 0 if result["connected"] else 2
     if args.command == "cohort":
         from uuid import uuid4
 

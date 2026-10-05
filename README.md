@@ -23,7 +23,9 @@ uv sync --locked
 uv run frictionlab start
 ```
 
-The CLI opens a localhost dashboard. Paste a URL, choose an evidence source, select individual checks or all six categories, and start. Connect your own Groq or Gemini key in the dashboard if you want AI recommendations. Core structural checks work without a key. No models or browsers download automatically.
+The CLI opens a localhost dashboard. Paste a URL, choose an evidence source, select individual checks or all six categories, and start. Connect your own Groq, Gemini or Morpheus key in the dashboard if you want AI recommendations. Core structural checks work without a key. No models or browsers download automatically.
+Morpheus is also supported with a separate paid-credit acknowledgement and an ignored local `.env` option. See the [local replica and provider guide](docs/phase15-16-local.md); do not commit or share API keys.
+For a minimal first-run check, use `uv run frictionlab doctor --assessment-only`. The [local pilot and release-readiness guide](docs/phase17-release-readiness.md) explains installation, evidence interpretation, partial reports and upgrade steps.
 
 For the native desktop launcher:
 
@@ -99,7 +101,7 @@ Mind2Web reference scores are separate from actual planner evaluation. Optional 
 
 ## Development and roadmap
 
-[Phase 10](docs/phase10-local-product.md) records local CLI distribution and BYOK implementation/verification. Phase 11 covers clean installation, consolidated regression and pilot release validation. External replicas and human calibration remain additional work.
+[Phase 10](docs/phase10-local-product.md) records local CLI distribution and BYOK implementation/verification. The [implementation plan](IMPLEMENTATION_PLAN.md) records Phase 15's local preflight and still-open external-replica gate, Phase 16's qualified local Morpheus connection, and Phase 17's local pilots. Optional hosted deployment, including any Supabase integration, is deferred to the final Phase 18. The existing GitHub Pages landing is informational; assessments and reports stay local.
 
 Acceptance runs once after construction; rerun affected failures only. See [CONTRIBUTING](CONTRIBUTING.md), [SECURITY](SECURITY.md) and the [implementation plan](IMPLEMENTATION_PLAN.md). Project code is licensed under [MIT](LICENSE); third-party components retain their notices.
 

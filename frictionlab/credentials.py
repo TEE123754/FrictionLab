@@ -7,7 +7,43 @@ import threading
 
 _LOCK = threading.RLock()
 _SESSION: dict[str, str] = {}
-PROVIDERS = {"groq": "GROQ_API_KEY", "gemini": "GEMINI_API_KEY"}
+PROVIDERS = {
+    "groq": "GROQ_API_KEY",
+    "gemini": "GEMINI_API_KEY",
+    "morpheus": "MORPHEUS_API_KEY",
+}
+
+
+def _local_env_value(name):
+    """Read only named local values; never inject arbitrary entries into process env."""
+    if name not in {"MORPHEUS_API_KEY", "MORPHEUS_BASE_URL"}:
+        return None
+    from frictionlab.configuration import ROOT
+
+    path = ROOT / ".env"
+    try:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 16_384:
+            return None
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.startswith(name + "="):
+                return line.partition("=")[2].strip()
+    except (OSError, UnicodeError, ValueError):
+        return None
+    return None
+
+
+def _local_env_key(provider):
+    if provider != "morpheus":
+        return None
+    value = _local_env_value("MORPHEUS_API_KEY")
+    return validate_key(provider, value) if value else None
+
+
+def morpheus_base_url():
+    value = os.environ.get("MORPHEUS_BASE_URL") or _local_env_value("MORPHEUS_BASE_URL")
+    if value and value.rstrip("/") != "https://api.mor.org/api/v1":
+        raise ValueError("Morpheus base URL must be the documented HTTPS endpoint")
+    return "https://api.mor.org/api/v1"
 
 
 def validate_key(provider, value):
@@ -72,7 +108,7 @@ def get_key(provider):
         environment_value = os.environ.get(PROVIDERS[provider])
         if environment_value:
             return validate_key(provider, environment_value)
-        value = _SESSION.get(provider)
+        value = _SESSION.get(provider) or _local_env_key(provider)
         if not value:
             try:
                 value = secure_backend().get_password("FrictionLab", provider)

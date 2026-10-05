@@ -57,14 +57,9 @@ def doctor(inference_path=None):
         check("workspace_writable", True, str(ROOT))
     except OSError:
         check("workspace_writable", False, "Choose a writable FRICTIONLAB_HOME")
-    browser = os.environ.get("FRICTIONLAB_BROWSER_PATH") or next(
-        (
-            path
-            for name in ("google-chrome", "chromium", "chromium-browser")
-            if (path := shutil.which(name))
-        ),
-        None,
-    )
+    from frictionlab.assessment.render import browser_path
+
+    browser = browser_path()
     check(
         "browser",
         browser and Path(browser).is_file(),
@@ -97,10 +92,67 @@ def doctor(inference_path=None):
         check(
             "inference_policy", False, "Missing key or invalid configuration; see local setup guide"
         )
+    assessment_required = {"workspace_writable", "playwright", "httpx"}
+    ready_for_assessment = all(
+        item["ok"] for item in checks if item["check"] in assessment_required
+    ) and assessment_required.issubset({item["check"] for item in checks})
     return {
         "ready_for_audit": all(item["ok"] for item in checks),
+        "ready_for_assessment": ready_for_assessment,
+        "ready_for_offline_browser": ready_for_assessment and bool(browser),
         "checks": checks,
         "network_requests": 0,
         "downloads": False,
         "models_started": False,
     }
+
+
+async def provider_check(model: str):
+    """One explicitly requested, bounded Morpheus inference; return no model text or key."""
+    import asyncio
+    import time
+
+    from frictionlab.planning.cloud_transport import CloudModelRuntime
+
+    settings = InferenceSettings(
+        provider="morpheus",
+        model=model,
+        allow_remote=True,
+        share_sanitized_state=True,
+        billing_acknowledged=True,
+        max_requests=1,
+        max_tokens=4096,
+        max_runtime_seconds=20,
+        request_timeout_seconds=15,
+        max_retries=0,
+    )
+    runtime = CloudModelRuntime(settings)
+    try:
+        await runtime.__aenter__()
+        response = await asyncio.to_thread(
+            runtime.complete,
+            [
+                {"role": "system", "content": 'Return only JSON: {"ok": true}.'},
+                {"role": "user", "content": "Connection check."},
+            ],
+            32,
+            time.monotonic() + 15,
+        )
+        message = response["choices"][0]["message"]["content"]
+        return {
+            "connected": isinstance(message, str) and bool(message),
+            "provider": "morpheus",
+            "model": model,
+            "requests": runtime.budget.requests,
+            "model_text_saved": False,
+        }
+    except PlannerStopped as exc:
+        return {
+            "connected": False,
+            "provider": "morpheus",
+            "category": exc.category,
+            "requests": runtime.budget.requests,
+            "model_text_saved": False,
+        }
+    finally:
+        await runtime.close()

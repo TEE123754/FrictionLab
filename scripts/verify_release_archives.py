@@ -18,6 +18,8 @@ for names in (wheel_names, source_names):
         "frictionlab/web/index.html",
         "vendor/axe-core/axe.min.js",
         "docs/local-assessment.md",
+        "docs/phase17-release-readiness.md",
+        "examples/phase17-pilots/checkout-defect.html",
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
     ):

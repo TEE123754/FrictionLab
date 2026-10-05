@@ -8,6 +8,7 @@ import time
 
 import httpx
 
+from frictionlab.credentials import morpheus_base_url
 from frictionlab.planning.contracts import PlannerStopped
 from frictionlab.planning.free_service_policy import (
     FreeQuotaPaused,
@@ -19,6 +20,7 @@ from frictionlab.planning.inference import provider_key, safe_text
 ENDPOINTS = {
     "groq": "https://api.groq.com/openai/v1/chat/completions",
     "gemini": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    "morpheus": "https://api.mor.org/api/v1/chat/completions",
 }
 
 
@@ -102,7 +104,11 @@ class CloudModelRuntime:
                     self.retries += 1
                 with self.client.stream(
                     "POST",
-                    ENDPOINTS[self.config.provider],
+                    (
+                        morpheus_base_url() + "/chat/completions"
+                        if self.config.provider == "morpheus"
+                        else ENDPOINTS[self.config.provider]
+                    ),
                     headers={"Authorization": "Bearer " + provider_key(self.config.provider)},
                     json=payload,
                     timeout=min(remaining, self.config.request_timeout_seconds),

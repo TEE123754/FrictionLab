@@ -1,6 +1,6 @@
 # Local website assessment workspace
 
-FrictionLab runs on your computer and keeps reports there. The dashboard and native launcher share the same assessment engine. Neither installs models nor downloads a browser automatically. AI advice is optional and requires your own eligible Groq or Gemini key and an explicitly selected model.
+FrictionLab runs on your computer and keeps reports there. The dashboard and native launcher share the same assessment engine. Neither installs models nor downloads a browser automatically. AI advice is optional and requires your own Groq, Gemini or Morpheus key and an explicitly selected model. Morpheus may consume paid credits; it has a separate acknowledgement and one-request smoke path described in [the local provider guide](phase15-16-local.md).
 
 ## Quick start
 

@@ -2,9 +2,9 @@
 
 **Product:** Autonomous, multi-agent behavioral testing for staging web applications.  
 **Architecture:** Python application running locally, with an interactive dashboard and exportable reports.  
-**Cost constraint:** No required paid APIs, subscriptions, cloud compute, or credit card. Uses existing local hardware.  
-**Document date:** October 2, 2026 (Asia/Kuala_Lumpur).
-**Status:** Phases 0–11 complete for their declared owned-fixture/offline/Linux-mocked gates. Phase 12 local assessment passed its Linux/browser/installed-wheel gate. Phase 13 native desktop passed the Windows extracted-download gate. Phase 14 public source, permanent download and landing publication is in progress. Live provider quality, arbitrary interactive replicas, human calibration and public publication remain separate work.
+**Cost constraint:** Local execution with no required subscription or cloud compute. Agent testing requires a configured AI model: the user's own eligible API key or an explicitly configured local model. Preserve a no-paid-API local option; paid providers require explicit opt-in and spending limits.
+**Document date:** October 5, 2026 (Asia/Kuala_Lumpur).
+**Status:** Phases 0–14 are complete for their declared fixture, offline, Windows desktop and public distribution gates. Runtime execution remains local. Phase 15 preparation exists, but user-supplied repo/replica execution remains blocked pending its independent isolation gate. Phase 16's local Morpheus connection/report-boundary gate passed; its newly required agent-planner integration is pending. Phase 17's unified agent-first onboarding and interactive pilots are pending. Phase 18 remains the final, deferred hosted-deployment phase. Existing static checks, API connection checks and fixture results do not establish completion of the primary agent workflow. The public source, downloads and static landing page do not host assessments or user data.
 
 ## 1. Intended outcome
 
@@ -20,6 +20,29 @@ The first release should support:
 - Matched before/after runs to assess interface changes.
 
 Treat explanations as synthetic UX hypotheses. Agent mistakes, execution errors, and provider failures must remain distinguishable from interface failures and simulated abandonment.
+
+### Primary product workflow — AI agents act as website users
+
+**Product clarification — October 5, 2026:** FrictionLab's primary experience is autonomous behavioral testing. AI agents observe the interface, choose actions, click, type, navigate and attempt user goals under explicit persona constraints. AI must drive browser decisions during execution; adding AI prose to a static scan does not satisfy this workflow.
+
+Both entry points must reach the same local run workspace and engine:
+
+| Entry point | Intended user flow |
+|---|---|
+| Terminal | Install and run `uv run frictionlab start` → open the localhost dashboard → connect the user's AI provider/model or configured local model → provide a repository/local source copy or isolated website → prepare and validate the test environment → choose goals and personas → run agents → review/export the detailed report |
+| Windows desktop | Download/extract and open `FrictionLab.exe` → connect the user's AI provider/model or configured local model → start/open the local dashboard → follow the same target, environment, goal, agent and report flow |
+
+These are planned end-to-end agent flows. The current CLI/desktop launches the static assessment workspace; arbitrary repo/website agent execution is not yet available.
+
+- **AI user testing (primary):** Requires a working planner model and verified interactive environment before execution. BYOK is the default onboarding path; a configured local model is an alternative. A missing key alone is acceptable only when the selected local model is ready. If no planner is available, block the agent run with actionable setup guidance and a prerequisite report.
+- **Static assessment (supporting):** Keep URL/snapshot structural, accessibility and viewport checks as a separately labeled mode. It works without AI; optional AI advice remains available. Static evidence cannot establish task completion, cognitive friction or agent abandonment.
+- **Repository input:** Accept a repo URL or local source copy as setup input, not as a directly browsable target. Resolve and record the revision; prepare a separate disposable workspace, identify supported build/start requirements, configure synthetic data and mocked integrations, and run the application behind the verified boundary. Show proposed build/start steps before running user-supplied code; never reuse production secrets or overwrite the user's checkout. Unsupported/private/multi-service projects need actionable setup guidance and must remain blocked until prerequisites are supplied.
+- **Website input:** Accept a verified isolated runnable website/replica and its environment policy. A production URL alone cannot establish backend/data/integration isolation; guide the user to supply a replica or explicitly select static assessment. Do not automatically crawl production or silently downgrade an agent run to a static scan.
+- **Goals and personas:** Let users define tasks such as finding a product, completing a test checkout or requesting a demo; select profiles, devices, test accounts, success criteria and per-run budgets. Provide templates without inventing business outcomes from a URL.
+- **Execution and evidence:** Show agent progress, actions, screenshots, milestones and stop/cancel controls. Use the model to decide each next action from bounded browser observations and journey memory. Record model/provider failures separately from observed interface friction.
+- **Output:** Automatically finalize the detailed report required by requirement B. Distinguish observed facts from synthetic interpretation, identify the mode and actual coverage, and include individual journeys, completion/abandonment outcomes, evidence, recommendations and limitations. Scores alone are insufficient.
+
+**Definition of done:** A new user can complete both CLI and desktop onboarding, connect a qualified planner, prepare a supported user-supplied repo or verified replica, run multiple task-driven personas and review/export their evidence-backed reports. Healthy and seeded-defect builds demonstrate observed successful and failed journeys with zero live-service sentinel traffic. Static-only acceptance or a single provider connection request cannot close this gate.
 
 ### Mandatory requirement A — Protect the deployed website
 
@@ -161,10 +184,13 @@ Reference checks: [Playwright release notes](https://playwright.dev/python/docs/
 
 ```mermaid
 flowchart TD
-    UI[Local Streamlit dashboard] --> API[FastAPI coordinator]
+    Launch[CLI or desktop launcher] --> UI[Shared local dashboard]
+    UI --> Setup[Target preparation and model readiness]
+    Setup --> Boundary[Verified replica and integration boundary]
+    Boundary --> API[FastAPI coordinator]
     API --> Scheduler[Bounded session scheduler]
     Scheduler --> Agents[Independent persona agents]
-    Agents --> Models[Shared local inference services]
+    Agents --> Models[Selected BYOK planner or local inference service]
     Agents --> Grounding[Browser-use grounding adapter]
     Grounding --> Browser[Playwright browser broker]
     Browser --> Policy[Replica-only action and network policy]
@@ -245,6 +271,13 @@ The application uses the flat Python package shown above. Directories labeled pl
 | 9 | Static report sharing and optional free API adapters | Phase 8 |
 | 10 | Open-source local CLI distribution and BYOK | Phase 9 |
 | 11 | Complete release validation and pilot packaging | Phase 10 |
+| 12 | Supporting static assessment workspace; completed offline gate | Phases 10–11 |
+| 13 | Windows launcher and downloadable distribution; completed launcher gate | Phase 12 |
+| 14 | Public source, release and informational landing; completed publication gate | Phase 13 |
+| 15 | Supported repo setup and verified interactive replica execution | Existing fixture runner and Phases 12–14 |
+| 16 | BYOK/local model readiness, browser planner integration and agent report reliability | Phase 15; prior provider connection gate preserved |
+| 17 | Shared agent-first CLI/desktop onboarding, interactive pilots and release readiness | Phases 15–16 |
+| 18 | Optional hosted deployment, deferred until local agent workflow is qualified | Phase 17 and explicit hosting decision |
 
 ## Phase 0 — Validate feasibility and integration boundaries
 
@@ -864,6 +897,8 @@ If a release check fails, fix the issue and rerun the failed checks plus directl
 
 ## Phase 12 — Simple local assessment workspace (COMPLETE for declared offline gate)
 
+**Role after the October 5 product clarification:** This completed workspace is the supporting static assessment mode. Its optional AI recommendations do not implement the primary AI-user testing flow. Preserve its acceptance record; integrate the primary workflow through Phases 15–17.
+
 **Requested expansion — October 2, 2026:** A single-command CLI opens a loopback dashboard. Users paste a URL, choose any of functionality, usability, accessibility, responsiveness, performance and security, then receive a scored, evidence-backed report with passed/failed/skipped/incomplete counts. Core checks run locally; optional AI recommendations use the operator's own explicitly enabled provider account. No billing fallback or automatic model download.
 
 **Stack:** Existing Python 3.12/FastAPI/uvicorn/httpx/Playwright/axe-core, standard HTML parser, locally bundled HTML/CSS/JavaScript, OS-backed `jaraco/keyring`, existing bounded Groq/Gemini adapters. No hosted backend.
@@ -899,13 +934,78 @@ If a release check fails, fix the issue and rerun the failed checks plus directl
 
 **Completion checkpoint — October 2, 2026:** Reviewed 847 Git history objects/489 blobs for credential-like strings: seven matches were synthetic fixtures and no real key or private-key material was identified. The MIT [repository](https://github.com/TEE123754/Agentic) is public with the [landing page](https://tee123754.github.io/Agentic/) set as its homepage. [Release v0.1.0](https://github.com/TEE123754/Agentic/releases/tag/v0.1.0) has the qualified Windows ZIP (SHA-256 `1181c7498d1d8f3abdd823135af0424b8af49ac93e135ad3fe9ef4d8f2d63d78`), wheel (`0eb2d29b3b510097760b2bf1c16dd115ac9195cee6cf74917069860b9a8fda37`), source archive (`a604dfde6afac71ac2043dc8ed7f46ddcd8ef1d8c86f636a6c392aa8f883f3d7`) and combined `SHA256SUMS`; local recomputation matched all three and GitHub asset digests matched. The [Pages deployment](https://github.com/TEE123754/Agentic/actions/runs/36962346221) succeeded. The landing URL and [sample audit](https://tee123754.github.io/Agentic/examples/phase9-static/index.html) returned HTTP 200, and the staged site passed internal-link validation. A final editorial update to current scope/download wording was redeployed and verified. No repeat product/browser test was needed after the Phase 12–13 gates; publication checks covered only archives, visibility, links and static site. Remaining qualification is declared product scope: real provider/account smoke, arbitrary isolated interactive replicas, other OS frozen binaries and human-churn calibration. These are not represented as completed release gates.
 
+## Phase 15 — Local isolated-replica journeys (IN PROGRESS; external execution gate open)
+
+**Goal:** Extend the already working fixture-only cohort runner to user-supplied *local, independently isolated* application replicas. A URL or a `staging` hostname alone is not evidence of isolation; if prerequisites cannot be established, the runner produces a blocked/partial report and makes no target request.
+
+**Jobs:** Define an import/setup path for a local copy and a signed-off `EnvironmentPolicy` manifest. Verify the application build, disposable database, test accounts, mocked payments/email/analytics and other integrations, blocked production origins, and cleanup ownership. Enforce deny-by-default egress outside the browser as well as Playwright request checks; include redirects, DNS rebinding, beacons, frames, workers and WebSockets. Bound concurrency, request rate, actions and runtime. Add a dry-run policy check and emergency stop. Then enable interactive functionality/usability/accessibility/responsiveness journeys only for accepted replicas; keep URL-only and uploaded snapshots available without a replica.
+
+**Stack:** Existing Python/Playwright/browser-use/smolagents runner, local FastAPI dashboard, DuckDB evidence, `EnvironmentPolicy`, and a user-controlled local network boundary or container. No production website, hosted runner or Supabase dependency.
+
+**End-of-phase gate:** On a disposable replica, run healthy and seeded-defect multi-profile journeys with a live-service sentinel at zero requests and unchanged data; review completed, abandoned and blocked reports. Run the full phase batch once after construction, then only directly affected checks for repairs. Do not install containers/models on the operator laptop merely for CI validation.
+
+**October 5 checkpoint:** Added `frictionlab replica-check` and a strict local declaration schema for origin, source copy, build, disposable data/accounts, mocks, blocked production origins, network boundary and cleanup. It makes zero target requests, names missing prerequisites and always returns `execution_enabled: false`: a declaration cannot establish an independent egress boundary. Two phase-specific preflight cases passed, including a fully populated declaration that remains blocked. The prior bundled-fixture runner and its earlier zero-sentinel gates remain intact. **Left:** supply a permissioned, disposable local application copy and verify an independent runtime/backend/integration boundary; adapt the interactive runner and complete this phase's healthy/defect cohort gate. The operator chose bundled fixtures only for now, so external interactive execution is intentionally blocked and this phase stays unchecked.
+
+**Required extension — repo/website preparation:**
+
+1. Build a target setup contract for repository URL, local source copy and existing isolated replica. Record input type, source revision/build, supported stack, build/start commands, service origins and setup failures.
+2. Implement one explicitly documented supported repo stack first. Prepare a disposable copy with dependencies and build/start execution contained by the runtime boundary; restrict dependency-fetch access to a separate setup stage. Private repository access must use local credential handling and must not leak credentials into model context or artifacts.
+3. Provide a guided environment setup for synthetic data, test accounts, integration mocks, production-origin blocks, network controls, cleanup and resource budgets. Record independently observed boundary evidence; declarations and a local URL alone remain insufficient.
+4. Replace the fixture-only execution admission path with validated replica admission for supported inputs. Keep existing fixture coverage and block unsupported configurations before navigation.
+5. Adapt browser grounding, task configuration and reset/cleanup to user-supplied application builds without relying on fixture-specific element names or routes.
+
+**Additional acceptance:** Exercise repo setup and an existing isolated website through separate admission paths. On a supported user-supplied app, demonstrate a healthy goal and seeded interface defect, source/build reproducibility, fresh test state, bounded execution and cleanup. Unsupported build, missing mocks and boundary failures must yield actionable blocked reports; verify no production checkout mutation, live-service traffic or leaked secrets.
+
+## Phase 16 — AI planner integration and report reliability (PARTIAL; local Morpheus connection gate complete)
+
+**Goal:** Connect a qualified BYOK or local model to the interactive persona planner, and make detailed agent reports dependable across successful and partial runs. Preserve the completed account-connection gate without treating it as proof of browser planning capability.
+
+**Jobs:** Verify one real user-selected provider/model path with the operator's own key, consent, request budget and quota behavior. Keep keys out of chat, URLs, command arguments, Git, logs, screenshots, reports and Supabase. Native OS storage or process memory is preferred; an operator-requested local `.env` is a plaintext, Git-ignored exception and must never be published. Add a local connection check that reveals capability and error category without exposing credentials. Preserve deterministic evidence and partial reports when AI is unavailable. Review findings for evidence/reproduction/remediation quality, scores plus coverage/confidence, passed/failed/skipped/incomplete counts, abandonment versus planner fault, export integrity and readable limitations. A planner model is mandatory for AI user testing. An AI key is optional only for static checks or when a qualified local planner is selected.
+
+**Stack:** Existing bounded Groq/Gemini adapters plus a fixed-host Morpheus OpenAI-compatible adapter, keyring or operator-requested ignored local `.env`, FastAPI/Tkinter, local report store and JSON/Markdown/offline HTML/ZIP exports. No remote database.
+
+**End-of-phase gate:** One real-account smoke with a deliberately low request budget after the user configures their key inside the local app; synthetic-key/quota/failure cases remain in CI. Inspect an exported complete report and a partial report. Run tests only after the phase is built, with affected-only reruns for defects. No provider key is needed to plan or build this phase.
+
+**October 5 checkpoint:** Added Morpheus as an optional OpenAI-compatible provider using the fixed documented HTTPS endpoint, separate paid-credit acknowledgement, local ignored `.env` input or existing process/native credential storage, CLI/desktop/dashboard selection, exact-key redaction and `provider-check`. The user-approved live smoke used one bounded inference request with `llama-3.3-70b` and returned connected; no model text or secret was printed or stored. Phase-specific mocked policy/endpoint/redaction tests and four directly affected existing key/report/fault cases passed **8/8** after one test-harness-only repair; Ruff passed. Existing Phase 12 report/export acceptance remains the report quality gate, including a reviewed complete report and partial renderer/AI fault handling. No repeat full suite or browser test was run. Morpheus may consume paid credits; the free-tier-only claim does not apply to this provider. No Supabase or hosted runtime was introduced. See [local setup and scope](docs/phase15-16-local.md).
+
+**Required extension — model drives user actions:**
+
+- Separate provider connectivity, static-advice capability and interactive planner readiness in the API and UI. Check the selected model's supported action/tool contract; do not infer readiness from a successful text response.
+- Route BYOK inference through the existing restricted planner/action broker. Feed bounded, sanitized browser observations, persona constraints, goal, memory and remaining budget; validate every proposed action before Playwright executes it. Treat website content as untrusted and never expose app secrets or unrestricted shell tools to the planner.
+- Make a qualified local planner selectable through the same readiness contract. Download/setup remains explicit; do not silently install weights or switch providers.
+- Implement per-session and cohort request/token/runtime limits, cancellation and explicit provider/account spending acknowledgements. The static-advice path's one-request limit is separate from a multi-step journey budget; never silently fall back to another paid provider.
+- Block a new agent run when no planner is ready. A mid-run timeout, invalid action, quota failure or disconnection ends affected execution with its recorded evidence and a partial report; it must not become a fabricated UX failure or a completed static assessment.
+- Finalize and review reports from saved evidence, including model identity, actual action history, profile/device attribution, goal criteria, termination reason and uncertainty. Synthesis failure must preserve deterministic facts and a clearly partial report.
+
+**Additional acceptance:** Run one bounded real-model interactive journey on the accepted disposable replica with explicit provider consent/budget, and the configured local planner alternative on a suitable disposable runner. Verify model-selected actions and resulting browser changes from saved evidence. Cover missing planner, invalid actions, quota/timeout, cancellation and synthesis failure with synthetic fault cases. Review complete and partial agent reports and zero-sentinel evidence. A provider connection smoke or findings-only advice request cannot satisfy this extension.
+
+## Phase 17 — Unified agent workflow, local pilots and release readiness (PENDING agent workflow gate)
+
+**Goal:** Demonstrate that a new user can install through CLI or Windows desktop, connect a planner, prepare a supported repo/replica, configure user goals/personas, run agents and interpret/export detailed results locally. State exactly what the synthetic conclusions support.
+
+**Primary workflow construction:** Integrate the shared dashboard with Phases 15–16. Make AI user testing the primary mode and static assessment an explicit supporting choice. Provide readiness states for model, browser, target/build, boundary and test data; show actionable setup gaps before run admission. Add goal/persona/device selection, budgets, live agent progress, stop/cancel, saved trajectories, report review and exports. CLI and desktop must launch the same coordinator and workspace; desktop key setup alone must not imply agent readiness. Until admission gates pass, display the missing prerequisites instead of presenting arbitrary website testing as available.
+
+**Jobs:** Pilot two or three permissioned local replicas or supplied offline copies with varied SPAs; compare seeded defects with fixed builds. Review false positives, incomplete evidence, per-category coverage and semantic grounding. Conduct human review of a sample of findings before making any churn/UX predictive claim; until then label them synthetic hypotheses. Finish first-run setup, browser detection, key setup, actionable prerequisites, installation/upgrade and troubleshooting. Qualify macOS/Linux frozen binaries only if they are intended for release; otherwise keep source mode and say so. Keep Obscura, vision models and extra providers optional experiments behind explicit comparative acceptance rather than silently replacing the qualified Chromium path. Prepare a new versioned local release only after this gate.
+
+**End-of-phase gate:** One consolidated local-product acceptance run on disposable CI runners after construction: install, dashboard and desktop start, one offline assessment, one protected replica cohort, report/replay/export, interruption recovery and sentinel checks. Review the actual report and installation evidence. Do not repeat the entire suite after every edit.
+
+**Required interactive pilot gate:** Use two or three permissioned runnable replicas, including at least one supported repository setup and one existing isolated website, with healthy/seeded-defect comparisons and varied routes/forms or SPA behavior. Static HTML pilot files and earlier bundled-fixture outcomes are supplementary evidence and cannot substitute for these runs. Verify both entry points end to end, model-driven journeys, reviewed findings and complete/partial exports; retain evidence of zero live-service traffic and cleanup. Update README, setup guides, launcher/dashboard copy, landing page and release notes to describe the qualified agent workflow and its supported stacks without claiming unrestricted website testing. Release a new local version only after Phases 15–17 pass.
+
+## Phase 18 — Optional hosted deployment (DEFERRED; FINAL PHASE)
+
+**Boundary:** The tool stays local through Phases 15–17. The public GitHub Pages site is informational only; it is not an assessment service. No cloud runtime, user target URL, report or credential is deployed as part of the current plan. Hosted execution is a separate product and security decision, not required to use the CLI or desktop app.
+
+**Deployment jobs, only after an explicit hosting decision:** Define whether the cloud surface is documentation, private report synchronization or a hosted assessment runner. Design tenant/auth boundaries, secret handling, data retention/deletion, consent, encryption, egress policy and per-user spending limits. If Supabase is chosen, use it only for the approved hosted features and keep privileged credentials server-side; it does not replace the local report store. Provision non-production infrastructure first, migrate only intended nonsecret data, test isolation and billing limits, and then deploy with rollback and monitoring. Never send an AI key or Supabase credential in chat or commit it to the repository; supply each through the app's secure local setup or the chosen host's secret manager when that phase begins.
+
+**Gate before deployment:** Local Phases 15–17 complete, threat model and privacy/data-flow review approved, a hosted-runner boundary independently validated against zero production side effects, and a user decision on the exact hosted scope. Until then, Phase 18 remains unchecked and no Supabase key is needed.
+
 ## 6. First milestone to prioritize
 
-Complete Phases 0–4 before expanding the dashboard or cohort size.
+The original single-agent fixture milestone in Phases 0–4 has passed within its declared scope. The next priority is the primary user-supplied application workflow, completed in dependency order: Phase 15 target preparation/isolation → Phase 16 model-driven browser execution → Phase 17 unified onboarding and interactive pilots.
 
-The milestone is a single agent that attempts checkout, encounters a deliberately unhelpful validation message, records the failed interactions, loses patience according to explicit rules, and saves a defensible abandonment explanation. The same goal should succeed after the fixture is fixed.
+Start with one supported disposable repo and one bounded persona journey. The agent must attempt a user goal, observe a seeded interface defect, record actions/evidence and produce a defensible report; the same goal should succeed after the interface is fixed. Then qualify the initial three profiles and representative journeys through both CLI and desktop entry points. A missing model or unverified environment must produce a clear blocked report.
 
-This proves the core product behavior before investment in larger swarms, additional model integrations, or elaborate reporting.
+Additional static categories, providers and hosted features do not close this milestone. Keep Phase 18 deferred until the local agent workflow passes its gates.
 
 ## 7. Progress checklist
 
@@ -924,5 +1024,9 @@ This proves the core product behavior before investment in larger swarms, additi
 - [x] Phase 12 — Simple local assessment workspace (51 initial passes; 3/3 affected and installed-wheel acceptance; report and screenshot reviewed)
 - [x] Phase 13 — Native desktop and downloadable distribution (Windows native 2/2; extracted executable offline smoke and checksum passed)
 - [x] Phase 14 — Public open-source distribution and product landing (public MIT repo/release and Pages landing/sample; archive digests and HTTP 200 checked)
+- [ ] Phase 15 — Repo setup and isolated-replica journeys (declaration/preflight 2/2 preserved; supported repo preparation, execution boundary and cohort gate open)
+- [ ] Phase 16 — AI planner integration and agent report reliability (prior Morpheus connection smoke and 8/8 focused checks complete; interactive BYOK/local planner gate pending)
+- [ ] Phase 17 — Unified agent-first CLI/desktop workflow, interactive pilots and release readiness
+- [ ] Phase 18 — Optional hosted deployment (last phase; deferred)
 
 Update a checkbox only after completing its phase and its consolidated boundary checks.

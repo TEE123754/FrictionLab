@@ -15,11 +15,12 @@ from frictionlab.planning.contracts import PlannerStopped
 
 
 class InferenceSettings(Contract):
-    provider: Literal["local", "groq", "gemini"] = "local"
+    provider: Literal["local", "groq", "gemini", "morpheus"] = "local"
     model: str = Field(default="", max_length=120, pattern=r"^[a-zA-Z0-9_./:-]*$")
     allow_remote: bool = False
     share_sanitized_state: bool = False
     free_tier_confirmed: bool = False
+    billing_acknowledged: bool = False
     max_requests: int = Field(default=24, ge=1, le=100, strict=True)
     max_tokens: int = Field(default=180000, ge=512, le=500000, strict=True)
     max_input_bytes: int = Field(default=20000, ge=512, le=24000, strict=True)
@@ -35,17 +36,17 @@ class InferenceSettings(Contract):
             raise ValueError("Use a model identifier, never a credential")
         if any(
             os.environ.get(name) and self.model == os.environ.get(name)
-            for name in ("GROQ_API_KEY", "GEMINI_API_KEY")
+            for name in ("GROQ_API_KEY", "GEMINI_API_KEY", "MORPHEUS_API_KEY")
         ):
             raise ValueError("A credential cannot be used as a model identifier")
         if self.provider != "local" and not (
             self.model
             and self.allow_remote
             and self.share_sanitized_state
-            and self.free_tier_confirmed
+            and (self.billing_acknowledged if self.provider == "morpheus" else self.free_tier_confirmed)
         ):
             raise ValueError(
-                "Remote inference requires model, input-sharing opt-in and free-tier acknowledgement"
+                "Remote inference requires model, input-sharing opt-in and account-cost acknowledgement"
             )
         return self
 
@@ -82,10 +83,12 @@ def safe_text(value):
     text = str(value)
     for secret in known_keys():
         text = text.replace(secret, "[redacted credential]")
-    for name in ("GROQ_API_KEY", "GEMINI_API_KEY"):
+    for name in ("GROQ_API_KEY", "GEMINI_API_KEY", "MORPHEUS_API_KEY"):
         secret = os.environ.get(name, "")
         if secret:
             text = text.replace(secret, "[redacted credential]")
+    if secret := get_key_for_redaction():
+        text = text.replace(secret, "[redacted credential]")
     text = re.sub(r"https?://[^\s<>\"']+", "[redacted URL]", text)
     text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[redacted email]", text)
     text = re.sub(r"\b(?:gsk_|sk-|gh[pousr]_|AIza)[A-Za-z0-9_-]{8,}", "[redacted credential]", text)
@@ -94,3 +97,10 @@ def safe_text(value):
         "[redacted credential]",
         text,
     )
+
+
+def get_key_for_redaction():
+    """Account for an ignored local .env without exposing its contents."""
+    from frictionlab.credentials import get_key
+
+    return get_key("morpheus")

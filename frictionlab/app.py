@@ -19,11 +19,13 @@ from frictionlab.planning.inference import InferenceSettings
 class Connection(BaseModel):
     model_config = ConfigDict(extra="forbid")
     provider: str
-    key: str = Field(min_length=8, max_length=4096)
+    key: str = Field(default="", max_length=4096)
     model: str = Field(min_length=1, max_length=120)
     remember: bool = False
     share_findings: bool = False
     free_tier_confirmed: bool = False
+    billing_acknowledged: bool = False
+    use_local_env: bool = False
 
 
 def connect(root, value):
@@ -33,13 +35,18 @@ def connect(root, value):
         allow_remote=True,
         share_sanitized_state=value.share_findings,
         free_tier_confirmed=value.free_tier_confirmed,
+        billing_acknowledged=value.billing_acknowledged,
         max_requests=1,
         max_tokens=24000,
         max_retries=0,
         max_runtime_seconds=45,
         request_timeout_seconds=30,
     )
-    save_key(value.provider, value.key, remember=value.remember)
+    if value.use_local_env:
+        if value.provider != "morpheus" or value.remember or value.key or not get_key("morpheus"):
+            raise ValueError("Local .env key is available only for Morpheus without remembering")
+    else:
+        save_key(value.provider, value.key, remember=value.remember)
     save_settings(root, settings)
 
 

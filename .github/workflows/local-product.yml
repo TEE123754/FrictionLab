@@ -25,6 +25,7 @@ jobs:
     env:
       FRICTIONLAB_BROWSER_PATH: /usr/bin/google-chrome
       FRICTIONLAB_APP_EVIDENCE: artifacts/local-workspace
+      FRICTIONLAB_PHASE17_EVIDENCE: artifacts/phase17/local-pilot
       ANONYMIZED_TELEMETRY: 'false'
       DO_NOT_TRACK: '1'
     steps:
@@ -46,9 +47,10 @@ jobs:
           if [ "${{ inputs.affected }}" = dashboard ]; then
             .venv/bin/python -m pytest -q tests/phase_12/test_assessment.py::test_real_offline_browser_and_dashboard tests/phase_12/test_assessment.py::test_renderer_deadline_preserves_partial_checks tests/phase_12/test_assessment.py::test_ai_fault_keeps_measured_findings --junitxml=artifacts/local-workspace/affected.xml
           else
-            .venv/bin/python -m pytest -q tests/phase_12 tests/phase_10 --junitxml=artifacts/local-workspace/acceptance.xml
+            .venv/bin/python -m pytest -q tests/phase_10 tests/phase_12 tests/phase_15 tests/phase_16 tests/phase_17 --junitxml=artifacts/local-workspace/acceptance.xml
           fi
           .venv/bin/python -I scripts/accept_local_workspace.py
+          .venv/bin/python scripts/verify_release_archives.py
           cp /tmp/frictionlab-installed-acceptance.json artifacts/local-workspace/
           sha256sum dist/* > dist/SHA256SUMS
       - uses: actions/upload-artifact@v4
@@ -58,6 +60,7 @@ jobs:
           path: |
             dist/
             artifacts/local-workspace/
+            artifacts/phase17/local-pilot/
           retention-days: 14
   desktop:
     if: inputs.target == 'all' || inputs.target == 'windows'

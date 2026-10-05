@@ -1,0 +1,33 @@
+# Phase 17 — local pilot and release-readiness record
+
+This gate keeps the runtime, reports and API keys on the operator's machine. It does not publish a new build or enable hosted assessments. The existing public landing page is documentation only.
+
+## First run
+
+1. Install Python 3.12 and [uv](https://github.com/astral-sh/uv), clone the source, then run `uv sync --locked`.
+2. Run `uv run frictionlab doctor --assessment-only`. `ready_for_assessment` means the local dashboard can run structural checks; `ready_for_offline_browser` means an existing Chrome/Edge/Chromium can also run offline axe and viewport checks. The separate `ready_for_audit` field belongs to the heavier fixture-cohort workflow and may require optional local model resources.
+3. Run `uv run frictionlab start`, open its localhost URL, paste a URL and select URL-only mode for zero target contact, or upload a copy you own. Use approved public capture only when a single GET and its possible server effects are acceptable.
+4. Select individual categories or all six. Review the overall score alongside each category's coverage and confidence. Open every issue's evidence, reproduction and recommendation. Export JSON, Markdown, offline HTML or ZIP to your chosen local location.
+5. For optional AI advice, use the native app or dashboard to connect a key securely. The operator-requested ignored `.env` route is documented in [Phase 15–16 setup](phase15-16-local.md); Morpheus may consume paid credits. The measured checks do not depend on AI.
+
+The portable Windows release is available from the project's GitHub Release, but the current Phase 17 changes remain local development changes until a separately reviewed future release. Source mode remains the supported path on macOS/Linux; frozen binaries for those platforms are not qualified. No model, container or browser is downloaded automatically.
+
+## Pilot design and limits
+
+The three owned HTML states under `examples/phase17-pilots` are a healthy checkout, a seeded-defect checkout and an enterprise evaluation form. They are synthetic static captures of possible SPA states, not whole applications. The acceptance gate renders them offline at 360, 768 and 1440 pixels, runs pinned axe-core, and saves reports and screenshots under ignored `artifacts/phase17/local-pilot`. A loopback sentinel must receive zero requests even when the defect capture contains an external image/script URL. The defect-to-healthy comparison is a structural quality diagnostic, not a conversion measurement or proof of interactive completion.
+
+Review each pilot issue against the authored defect list. The seeded defect is expected to expose missing title and H1, unlabeled control, missing image alternative, absent viewport meta, placeholder link and narrow-screen overflow. Other automated axe findings are review candidates; do not promote them to confirmed user harm without inspection. Evidence links must resolve to saved screenshots or reported document observations. The report must retain skipped dynamic functionality, cognitive, assistive, real-performance and active-security checks, with no unknown check counted as passed.
+
+The prior Phase 11 bundled-fixture healthy/defect cohort supplies the protected interactive comparison: healthy 3/3 completed, defect baseline partial with one grounded synthetic abandonment and two excluded agent faults, zero sentinel traffic and unchanged data. Those results do not generalize to an external website or human churn. A real human usability review and external isolated-replica pilot remain future work; Phase 15 stays open.
+
+## Troubleshooting and upgrade
+
+- **No browser detected:** Structural checks still run. Install Chrome/Edge normally or set `FRICTIONLAB_BROWSER_PATH` to an existing executable; rerun `doctor --assessment-only`. Missing browser inspections are incomplete, not passed.
+- **No AI connection or quota:** Leave AI off and keep the deterministic report. Check the provider/model/account and explicit sharing or credit acknowledgements. Do not paste a key into an issue, command argument or report.
+- **Blocked replica:** Read the `replica-check` gaps. A local path or staging hostname cannot prove isolated data, integrations and egress. Do not override the block with a browser-only proxy.
+- **Interrupted assessment:** Reopen the localhost dashboard to inspect its retained partial report, then start a new assessment. A running provider call can take its bounded timeout to return.
+- **Upgrade:** Back up the local workspace and reports, install a newer source/wheel or desktop ZIP only after reviewing its release notes and SHA-256 manifest, then run `doctor --assessment-only` and a zero-contact URL-only check. Do not mix old and new Python environments.
+
+## Release decision
+
+Complete this local gate only when the three pilot reports, evidence, ZIP exports, zero-contact sentinel, partial-report recovery, protected fixture cohort precedent, package contents and first-run instructions have been reviewed. The current version remains an explicitly limited local development release. No human-churn predictive claim, arbitrary external-app execution, hosted runner or Supabase persistence is approved by this gate.

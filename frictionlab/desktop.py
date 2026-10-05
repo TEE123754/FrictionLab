@@ -89,9 +89,11 @@ class Desktop:
         self.remember = tk.BooleanVar(value=False)
         self.sharing = tk.BooleanVar(value=False)
         self.free = tk.BooleanVar(value=False)
+        self.billing = tk.BooleanVar(value=False)
+        self.local_env = tk.BooleanVar(value=False)
         ttk.Label(frame, text="Provider").pack(anchor="w", pady=(10, 0))
         ttk.Combobox(
-            frame, textvariable=self.provider, values=("groq", "gemini"), state="readonly"
+            frame, textvariable=self.provider, values=("groq", "gemini", "morpheus"), state="readonly"
         ).pack(fill="x")
         ttk.Label(frame, text="Model identifier available to your account").pack(
             anchor="w", pady=(10, 0)
@@ -113,6 +115,12 @@ class Desktop:
         ).pack(anchor="w")
         ttk.Checkbutton(
             frame, text="I verified this account/model's free-tier eligibility", variable=self.free
+        ).pack(anchor="w")
+        ttk.Checkbutton(
+            frame, text="I understand Morpheus may use paid credits", variable=self.billing
+        ).pack(anchor="w")
+        ttk.Checkbutton(
+            frame, text="Use ignored local .env key (Morpheus only)", variable=self.local_env
         ).pack(anchor="w")
         ttk.Button(frame, text="Connect key", command=self.configure).pack(fill="x", pady=(12, 0))
         ttk.Separator(frame).pack(fill="x", pady=18)
@@ -139,10 +147,12 @@ class Desktop:
             value = self.connection_class(
                 provider=self.provider.get(),
                 model=self.model.get(),
-                key=self.key.get(),
-                remember=self.remember.get(),
+                key="" if self.local_env.get() else self.key.get(),
+                remember=self.remember.get() and not self.local_env.get(),
                 share_findings=self.sharing.get(),
                 free_tier_confirmed=self.free.get(),
+                billing_acknowledged=self.billing.get(),
+                use_local_env=self.local_env.get(),
             )
             self.key.set("")
             self.connect(self.workspace, value)
