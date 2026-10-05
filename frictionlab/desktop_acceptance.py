@@ -2,6 +2,8 @@
 
 import json
 import time
+import zipfile
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -109,6 +111,9 @@ def agent_smoke(root=None):
                         assert image.status_code == 200 and image.content.startswith(b"\x89PNG")
                     export = client.get(f"/api/agents/{id}/export/zip", headers=headers)
                     assert export.status_code == 200 and export.content.startswith(b"PK")
+                    with zipfile.ZipFile(BytesIO(export.content)) as bundle:
+                        assert all(item["path"] in bundle.namelist() for item in report["visual_evidence"])
+                        assert any(name.endswith(".dom.json") for name in bundle.namelist())
                     (root / f"{variant}-export.zip").write_bytes(export.content)
                     results[variant] = {"id": id, "outcome": outcome, "sentinel_requests": 0}
             (root / "acceptance.json").write_text(json.dumps({

@@ -77,16 +77,31 @@ class AgentWorkspace:
         return destination
 
     def export_zip(self, id: str) -> bytes:
+        report = self.report(id)
+        references = list(report["visual_evidence"])
+        for key in ("trajectories", "friction_events"):
+            for item in report[key]:
+                references.extend(item.get("evidence", []))
+        if report.get("abandonment_diagnosis"):
+            references.extend(report["abandonment_diagnosis"]["evidence"])
+        paths = []
+        for name in sorted({item["path"] for item in references}):
+            destination = (self.path(id) / name).resolve()
+            if (
+                not re.fullmatch(r"evidence/[A-Za-z0-9._/-]+\.(png|svg|json|txt)", name)
+                or ".." in Path(name).parts
+                or not destination.is_relative_to(self.path(id).resolve())
+                or not destination.is_file()
+            ):
+                raise ValueError("A reported evidence file is missing or invalid; export stopped")
+            paths.append((destination, name))
         output = io.BytesIO()
         with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             for format in ("json", "md", "html"):
                 path = self.path(id) / ("report." + format)
                 archive.write(path, path.name)
-            for item in self.report(id)["visual_evidence"]:
-                try:
-                    archive.write(self.evidence_path(id, item["path"]), item["path"])
-                except ValueError:
-                    continue
+            for destination, name in paths:
+                archive.write(destination, name)
         return output.getvalue()
 
     def list(self) -> list[dict]:

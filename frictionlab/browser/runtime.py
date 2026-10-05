@@ -61,7 +61,10 @@ class OwnedFixture:
             return RedirectResponse(self.sentinel.origin + "/redirect-target")
 
         self.server = uvicorn.Server(
-            uvicorn.Config(self.app, log_level="error", lifespan="off", access_log=False)
+            uvicorn.Config(
+                self.app, log_level="error", lifespan="off", access_log=False,
+                log_config=None,  # Frozen windowed apps have no stdout/stderr formatter streams.
+            )
         )
         self.task = asyncio.create_task(self.server.serve(sockets=[self.socket]))
         deadline = asyncio.get_running_loop().time() + 10
