@@ -31,7 +31,7 @@ def main():
     from frictionlab.launcher import LocalServer, workspace
 
     root = tk.Tk()
-    root.title("FrictionLab — Local website testing")
+    root.title("FrictionLab — Local website and fixture-agent testing")
     root.geometry("600x670")
     root.minsize(520, 600)
     app = Desktop(
@@ -78,7 +78,7 @@ class Desktop:
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="FrictionLab", font=("Segoe UI", 24, "bold")).pack(anchor="w")
         ttk.Label(
-            frame, text="Local website assessment · Your API key", font=("Segoe UI", 11)
+            frame, text="Local assessment and synthetic fixture agents · Your API key", font=("Segoe UI", 11)
         ).pack(anchor="w", pady=(0, 18))
         ttk.Label(frame, text="Connect your AI provider", font=("Segoe UI", 13, "bold")).pack(
             anchor="w"
@@ -127,11 +127,11 @@ class Desktop:
         ttk.Button(frame, text="Start local dashboard", command=self.start).pack(fill="x")
         ttk.Button(frame, text="Open dashboard", command=self.open).pack(fill="x", pady=7)
         ttk.Button(frame, text="Stop local service", command=self.stop).pack(fill="x")
-        self.status = tk.StringVar(value="Ready. Structural checks do not require an API key.")
+        self.status = tk.StringVar(value="Ready. Offline checks need no key; fixture agents need a planner.")
         ttk.Label(frame, textvariable=self.status, wraplength=510).pack(anchor="w", pady=12)
         ttk.Label(
             frame,
-            text="Paste a URL and choose checks in the local dashboard. Uploaded snapshots make no target requests. Dynamic flows require an isolated replica; browser isolation alone cannot protect production.",
+            text="Paste a URL for offline checks, or select a bundled disposable fixture for an AI browser journey. Your website's dynamic flows require an independently isolated replica; browser isolation alone cannot protect production.",
             wraplength=510,
         ).pack(anchor="w")
         try:

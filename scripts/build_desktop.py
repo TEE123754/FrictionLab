@@ -25,6 +25,8 @@ command = [
     "FrictionLab",
     "--collect-all",
     "playwright",
+    "--collect-all",
+    "smolagents",
     "--add-data",
     f"{root / 'frictionlab/web'};frictionlab/web",
     "--add-data",
@@ -37,8 +39,6 @@ command = [
     "transformers",
     "--exclude-module",
     "streamlit",
-    "--exclude-module",
-    "smolagents",
     str(root / "scripts/desktop_entry.py"),
 ]
 subprocess.run(command, cwd=root, check=True)

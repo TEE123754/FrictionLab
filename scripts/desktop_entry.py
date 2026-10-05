@@ -12,7 +12,13 @@ if __name__ == "__main__":
             result = main()
         except Exception as exc:  # noqa: BLE001 - Exit smoke mode without a blocking native error dialog.
             Path("packaged-failure.json").write_text(
-                json.dumps({"status": "failed", "exception_type": type(exc).__name__}),
+                json.dumps(
+                    {
+                        "status": "failed",
+                        "exception_type": type(exc).__name__,
+                        "missing_module": exc.name if isinstance(exc, ModuleNotFoundError) else None,
+                    }
+                ),
                 encoding="utf-8",
             )
             result = 1
