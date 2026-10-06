@@ -86,6 +86,7 @@ def write_report(
     artifact_root: Path,
     *,
     prepared_directory=False,
+    replace_existing=False,
     recover_partial=False,
     output_directory: Path | None = None,
     cohort_root: Path | None = None,
@@ -94,7 +95,7 @@ def write_report(
     links_root = cohort_root or artifact_root.parent
     if recover_partial and (directory / "report.html").exists():
         raise FileExistsError("A completed report export already exists")
-    if prepared_directory and any(
+    if prepared_directory and not replace_existing and any(
         (directory / f"report.{suffix}").exists() for suffix in ("json", "md", "html")
     ):
         raise FileExistsError("An exported report already exists")

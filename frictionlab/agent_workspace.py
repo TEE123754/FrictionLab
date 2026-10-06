@@ -180,7 +180,10 @@ class AgentWorkspace:
             "report_status": ReportStatus.PARTIAL,
             "terminal_reason": reason,
         })
-        write_report(report, self.root, prepared_directory=True, output_directory=self.path(id))
+        write_report(
+            report, self.root, prepared_directory=True, replace_existing=True,
+            output_directory=self.path(id),
+        )
         self.progress(id, str(status), reason)
 
     def submit(self, request: AgentRequest) -> str:

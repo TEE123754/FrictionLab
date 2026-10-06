@@ -116,9 +116,38 @@ def agent_smoke(root=None):
                         assert any(name.endswith(".dom.json") for name in bundle.namelist())
                     (root / f"{variant}-export.zip").write_bytes(export.content)
                     results[variant] = {"id": id, "outcome": outcome, "sentinel_requests": 0}
+            # Review the actual shared UI, rather than only its report API.
+            from playwright.sync_api import sync_playwright
+
+            from frictionlab.assessment.render import browser_path
+
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch(headless=True, executable_path=browser_path())
+                try:
+                    page = browser.new_page(viewport={"width": 1280, "height": 900})
+                    errors = []
+                    page.on("pageerror", lambda error: errors.append(str(error)))
+                    page.goto(server.url)
+                    page.locator("#agent-history button").filter(
+                        has_text=results["dead_button"]["id"][:8]
+                    ).click()
+                    page.locator("#agent-results h4").filter(
+                        has_text="Findings and remediation"
+                    ).wait_for()
+                    timeline = page.locator("#agent-results details").filter(
+                        has=page.locator("summary", has_text="Action timeline")
+                    )
+                    timeline.locator("summary").click()
+                    assert "Step 1: click" in timeline.inner_text()
+                    assert "undefined" not in page.locator("#agent-results").inner_text()
+                    assert "Observed friction" in page.locator("#agent-results").inner_text()
+                    page.screenshot(path=str(root / "agent-review.png"), full_page=True)
+                    assert not errors, errors
+                finally:
+                    browser.close()
             (root / "acceptance.json").write_text(json.dumps({
                 "provider": "scripted test double; no real inference",
-                "paid_requests": 0, "results": results,
+                "paid_requests": 0, "results": results, "dashboard_review": "passed",
             }, indent=2), encoding="utf-8")
             return 0
         finally:
