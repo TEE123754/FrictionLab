@@ -138,7 +138,9 @@ def agent_smoke(root=None):
                         has=page.locator("summary", has_text="Action timeline")
                     )
                     timeline.locator("summary").click()
-                    assert "Step 1: click" in timeline.inner_text()
+                    first_action = report["trajectories"][0].get("action")
+                    first_kind = first_action["kind"] if first_action else "unavailable"
+                    assert f"Step 1: {first_kind}" in timeline.inner_text()
                     assert "undefined" not in page.locator("#agent-results").inner_text()
                     assert "Observed friction" in page.locator("#agent-results").inner_text()
                     page.screenshot(path=str(root / "agent-review.png"), full_page=True)

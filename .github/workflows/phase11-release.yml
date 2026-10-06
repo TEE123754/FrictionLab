@@ -86,6 +86,7 @@ jobs:
           path: |
             dist/
             artifacts/phase11/validation/
+            artifacts/phase17/local-planner/
             artifacts/phase11/pytest-temp/
             artifacts/phase11/affected-temp/
             artifacts/phase3/healthy-*.json
