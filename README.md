@@ -76,7 +76,7 @@ Supported remote adapters are Groq, Gemini and Morpheus. Connect keys inside the
 
 Remote inference sends opted-in, bounded, sanitized observations or findings to the selected provider. Sanitization does not guarantee that all supplied content is non-sensitive. Provider availability, model compatibility and free-tier quotas vary. **Morpheus may charge usage** and requires separate acknowledgement; the tool does not guarantee zero-cost inference or silently fall back to another provider.
 
-A prepared local llama.cpp/Qwen3 planner can be explicitly selected in the dashboard. Setup is optional, requires about 2.5 GB of weights plus memory/CPU, and is documented in the [local installation guide](docs/phase10-installation.md). Selection performs no download or model launch. The pinned weight hash is checked before execution; file presence alone does not establish planner capability.
+A prepared local llama.cpp/Qwen3 planner can be explicitly selected in the dashboard. Setup is optional, requires about 2.5 GB of weights plus memory/CPU, and is documented in the [local installation guide](docs/phase10-installation.md). Selection performs no download or model launch. The pinned weight hash is checked before execution; file presence alone does not establish planner capability. One real healthy fixture journey has passed through the Linux source dashboard API; frozen Windows local inference still requires qualification. The model reached about 6 GB RSS on that CI runner, so BYOK avoids this local inference workload.
 
 ## Technology
 
@@ -95,6 +95,6 @@ Vision models and Phoenix are optional integrations, not prerequisites for the c
 
 ## Project status and contribution
 
-The offline assessment, Windows launcher and bundled-fixture execution/export milestones have acceptance evidence in the [implementation plan](IMPLEMENTATION_PLAN.md). External replica preparation, real-model qualification of the new dashboard path and broader interactive pilots remain open. Hosted deployment is the final deferred phase; Supabase is not required for local use.
+The offline assessment, Windows launcher and bundled-fixture execution/export milestones have acceptance evidence in the [implementation plan](IMPLEMENTATION_PLAN.md). External replica preparation, reviewed cohort-audit finalization in the new agent panel, frozen Windows real-model qualification and broader interactive pilots remain open. Hosted deployment is the final deferred phase; Supabase is not required for local use.
 
 Acceptance runs after construction, with affected checks repeated only when a repair warrants it. See [CONTRIBUTING](CONTRIBUTING.md) for development and [SECURITY](SECURITY.md) for vulnerability reporting. FrictionLab is licensed under [MIT](LICENSE).
