@@ -1,109 +1,100 @@
 # FrictionLab
 
-**Find interface friction before release, with synthetic users and evidence you can review.**
+**Evidence-led website quality assessment and synthetic user testing, on your own machine.**
 
-FrictionLab is an open-source Python tool for product and engineering teams investigating difficult user journeys. It combines a simple local website assessment dashboard with controlled synthetic-user cohorts. Teams can inspect offline snapshots, review evidence-backed findings, and investigate behavioral friction on disposable fixtures.
+FrictionLab helps product, design and engineering teams investigate interface problems before release. Assess an offline website copy, run controlled synthetic journeys on the bundled test application, and review findings with saved evidence and practical recommendations.
 
-[Product landing page](https://tee123754.github.io/Agentic/) | [Sample offline audit](examples/phase9-static/index.html) | [Implementation plan](IMPLEMENTATION_PLAN.md) | [Verified progress](docs/phase-status.md)
+The open-source application runs locally through a CLI or Windows desktop launcher. Reports remain on your computer. Optional cloud AI uses your own provider account; no hosted FrictionLab backend is required.
 
-## Download
+[Implementation plan](IMPLEMENTATION_PLAN.md) · [Verified progress](docs/phase-status.md) · [Sample report](examples/phase9-static/index.html) · [Downloads](https://github.com/TEE123754/FrictionLab/releases/tag/v0.1.0)
 
-- [Windows desktop ZIP and SHA256SUMS](https://github.com/TEE123754/Agentic/releases/tag/v0.1.0): extract the ZIP and open `FrictionLab.exe`. Chrome or Edge is needed for viewport and accessibility inspection. Connect your own eligible AI key in the native launcher when you want AI advice.
-- [Source, Python wheel and checksums](https://github.com/TEE123754/Agentic/releases/tag/v0.1.0): use Python 3.12 and uv for the CLI. No bundled model or browser download is required for URL-only checks.
-- [Public product landing](https://tee123754.github.io/Agentic/) and [detailed setup and safety scope](docs/local-assessment.md).
+## Product capabilities
 
-These releases are development builds for the declared offline and owned-fixture gates. A score must be read alongside coverage, skipped checks and the report's limitations.
+- **Six assessment categories:** functionality, usability, accessibility, responsiveness, performance and security, with explicit limits for each evidence source.
+- **Synthetic browser journeys:** select a persona, goal and seeded interface variant on a disposable local storefront. AI chooses actions through a restricted browser broker.
+- **Reviewable results:** severity-ranked findings, supporting evidence, reproduction or verification guidance, remediation advice and visible coverage gaps.
+- **Local workspace:** progress, stop controls, saved history, screenshots and JSON, Markdown, offline HTML and ZIP exports.
+- **Controlled inference:** explicit input-sharing consent, request and runtime limits, provider failure reporting and optional local inference.
 
-## Start a local assessment
+**Current scope:** autonomous execution accepts bundled fixtures only. User-supplied repositories and isolated application replicas remain under development and are blocked from interactive execution. Synthetic abandonment is a UX hypothesis, not a prediction of human conversion or churn. A successful API connection does not establish browser-planning capability.
+
+## Get started
+
+Use Python 3.12 and [uv](https://github.com/astral-sh/uv). The latest local workflow is on the development branch:
 
 ```sh
-git clone https://github.com/TEE123754/Agentic.git
-cd Agentic
+git clone --branch codex/phase17-local-readiness https://github.com/TEE123754/FrictionLab.git
+cd FrictionLab
 uv sync --locked
+uv run frictionlab doctor --assessment-only
 uv run frictionlab start
 ```
 
-The CLI opens a localhost dashboard. Paste a URL, choose an evidence source, select individual checks or all six categories, and start. Connect your own Groq, Gemini or Morpheus key in the dashboard if you want AI recommendations. Core structural checks work without a key. No models or browsers download automatically.
-The current development branch also has a **synthetic browser-agent** panel in the same dashboard and desktop-launched workspace. Select a persona, fixture goal and seeded UI variant, then set an AI request/time cap. This agent runs only against the bundled disposable storefront. A provider connection alone does not verify that the selected model can produce valid browser actions; planner faults become partial reports, not UX abandonment. The public v0.1.0 download predates this panel.
-Morpheus is also supported with a separate paid-credit acknowledgement and an ignored local `.env` option. See the [local replica and provider guide](docs/phase15-16-local.md); do not commit or share API keys.
-For a minimal first-run check, use `uv run frictionlab doctor --assessment-only`. The [local pilot and release-readiness guide](docs/phase17-release-readiness.md) explains installation, evidence interpretation, partial reports and upgrade steps.
+Open the localhost dashboard shown by the CLI. For static assessment, paste a URL, supply an offline HTML or ZIP copy, choose individual categories or all checks, and start. A URL alone provides very limited evidence. Core static checks do not require an AI key.
 
-For the native desktop launcher:
+For a synthetic journey, connect your provider in the dashboard, choose a bundled persona and goal, set decision/time limits, authorize the run and start. Review the terminal reason, findings, timeline and screenshots before exporting. Existing Chrome, Edge or Chromium is required for browser inspection; browsers and model weights are never downloaded automatically.
+
+To open the native launcher from source:
 
 ```sh
 uv run frictionlab desktop
 ```
 
-The native window provides masked key setup and start/open/stop controls for the same local workspace. Optional remembering uses your OS credential store; session-only keys never become plaintext files. The [Windows portable ZIP](https://github.com/TEE123754/Agentic/releases/download/v0.1.0/FrictionLab-windows-x64.zip) contains the earlier desktop build. Read the [setup, safety and category coverage guide](docs/local-assessment.md) before running it.
+The launcher provides masked API-key entry and start/open/stop controls for the same local dashboard.
 
-## What you receive
+### Windows download
 
-- Overall and per-category scores accompanied by executed coverage and confidence.
-- Severity-ranked issues with observations, reproduction steps and practical recommendations.
-- Passed, failed, skipped and incomplete checks, with missing prerequisites visible.
-- Progress, cancellation, local history, three viewport screenshots and JSON/Markdown/HTML/ZIP exports.
-- Optional bounded AI advice for measured findings; provider faults retain the deterministic report.
-- Existing owned-fixture cohort tools for synthetic behavioral journeys, patience, abandonment evidence, replay and comparisons.
+[Download the v0.1.0 release and checksums](https://github.com/TEE123754/FrictionLab/releases/tag/v0.1.0), extract the Windows ZIP and open `FrictionLab.exe`. This earlier release supports offline assessment; it **predates the new synthetic-agent panel and local-planner selector**. Current development binaries are retained temporarily in GitHub Actions artifacts, not published as a new release. Source installation above provides the current workflow.
 
-## Production protection and current scope
+See the [installation and scope guide](docs/local-assessment.md) and [pilot/readiness guide](docs/phase17-release-readiness.md).
 
-**Browser isolation alone cannot prevent production side effects.** URL-only inspection makes no DNS or website requests. Uploaded offline snapshots are rendered on a synthetic origin with application scripts, forms, frames, workers and external requests disabled. This dashboard never navigates its inspection browser to your submitted URL.
+## Protecting the website under review
 
-Public HTML capture is a separate, explicitly approved one-GET operation, without authentication, redirects or subresource fetching. A GET can affect logs or trigger server state changes: use an uploaded snapshot when zero target contact is required.
+**Browser isolation alone does not prevent production side effects.** Live requests can create logs, trigger analytics or alter backend state. FrictionLab does not automatically visit or crawl your submitted website URL.
 
-| Category | Available offline evidence | Additional access required |
+| Input or mode | Available checks | Boundary and limitations |
 |---|---|---|
-| Functionality | Declared link structure | Interactive flows, APIs and integrations require an isolated application/backend. |
-| Usability | Titles, headings and structural signals | Cognitive journeys require an isolated interactive replica; real churn needs human calibration. |
-| Accessibility | Alt/label declarations and axe-core | Keyboard, screen reader and compliance conclusions require interactive/manual review. |
-| Responsiveness | Viewport metadata and three static viewport checks | Dynamic layouts and complete asset fidelity require a replica. |
-| Performance | HTML size heuristic | Real load measurements and Core Web Vitals require a controlled replica/benchmark. |
-| Security | URL scheme; selected original headers on approved capture | TLS/server configuration, source/dependency and auth/exploit checks require additional access and authorization. |
+| URL text | URL scheme and declared target information | No DNS lookup or target request. Most checks are skipped. |
+| Uploaded offline HTML/ZIP | Structure, labels, axe accessibility, static viewport checks and HTML-size heuristics | Rendered at a synthetic origin with website scripts, forms, frames and external traffic blocked. Cannot establish dynamic functionality. |
+| Explicit public capture | One public HTML response and selected original headers | One approved GET, without authentication, redirects or subresources. A GET can have side effects; this is not zero-contact testing. |
+| Bundled disposable fixture | Bounded model-driven goals, observed friction, patience and synthetic abandonment | Synthetic data and controlled integrations; no arbitrary website navigation. |
+| User-supplied application | Planned interactive journeys | Requires verified separate data, mocked integrations, an independent network boundary and additional access. Currently blocked. |
 
-Unsupported work is explicitly skipped. An unavailable browser or interrupted check is incomplete. Scores do not count unknown checks as passing and are not production readiness or security certification.
+Offline assessment cannot establish backend transactions, real performance/Core Web Vitals, complete assistive usability, authorization correctness or exploit resistance. These require a controlled replica, source code and/or additional access. Unsupported checks are skipped; interrupted or unavailable checks are incomplete. Recommendations do not edit source or deploy fixes.
 
-Autonomous browser execution still accepts **bundled disposable fixtures only**; arbitrary deployed/staging application workflows remain blocked until a separate backend/data/integration boundary is verified. In the development branch, a missing browser or planner produces a blocked agent report without target contact, and Morpheus needs a separate acknowledgement for each run. FrictionLab provides advice and does not modify application source or deploy fixes. Local report review does not contact the tested website. Screenshot pixels can contain supplied content: review exports before sharing.
+## Reports that support decisions
 
-## Existing behavioral cohort workflow
+Static assessment reports include overall and category scores, executed coverage, confidence, severity-ranked issues, evidence, reproduction steps and remediation guidance. They account for passed, failed, skipped and incomplete checks.
 
-For deeper controlled persona investigations, see the [local CLI/BYOK guide](docs/phase10-installation.md) and [autonomous runner guide](docs/phase3-autonomous.md). Local model downloads are optional and can be several GB; the new snapshot dashboard does not need them. Cloud inference sends opted-in sanitized inputs to your chosen provider and uses your own eligible account. Free-tier availability and quotas are not guaranteed; no paid fallback is provided.
+Agent reports include the goal and persona scope, completion or terminal reason, action history, model outcomes, application friction, patience changes, screenshots, findings and limitations. Model failures are kept separate from observed application problems; a blocked run is never presented as a completed website audit. Agent reports are not a substitute for the six-category static scorecard.
 
-```sh
-uv run frictionlab doctor
-uv run frictionlab cohort --variant dead_button
-```
+ZIP exports contain the report and its referenced evidence. Review supplied content and screenshots before sharing. Scores describe executed checks and are not certification or proof of release readiness.
 
-Synthetic personas include an impatient mobile shopper, a keyboard/low-vision user and an enterprise evaluator. They are explicit behavioral configurations, not demographic, clinical or human conversion predictions. The older Streamlit cohort review uses `frictionlab serve` and `frictionlab dashboard`; the simple assessment interface uses the single `frictionlab start` command.
+## AI configuration, privacy and cost
 
-## Inspect and share a report
+Supported remote adapters are Groq, Gemini and Morpheus. Connect keys inside the local app. Remembered keys use the native OS credential store when available; otherwise use session memory. An operator-requested ignored `.env` is a plaintext exception. Never commit keys or include them in an issue or report.
 
-Open `examples/phase9-static/index.html` directly in your browser to explore a synthetic audit without installing Python. Open `site/index.html` for product information and documentation links.
+Remote inference sends opted-in, bounded, sanitized observations or findings to the selected provider. Sanitization does not guarantee that all supplied content is non-sensitive. Provider availability, model compatibility and free-tier quotas vary. **Morpheus may charge usage** and requires separate acknowledgement; the tool does not guarantee zero-cost inference or silently fall back to another provider.
 
-```sh
-uv run frictionlab export-static RUN_UUID --root artifacts/phase5 --output artifacts/my-audit
-```
-
-Replace `RUN_UUID` with a saved cohort run identifier and use a new output directory. Export creates an offline viewer and importable JSON; no upload occurs. Review screenshots and prose before sharing. Read the [sharing guide](docs/phase9-sharing.md) for limits and optional static hosting.
+A prepared local llama.cpp/Qwen3 planner can be explicitly selected in the dashboard. Setup is optional, requires about 2.5 GB of weights plus memory/CPU, and is documented in the [local installation guide](docs/phase10-installation.md). Selection performs no download or model launch. The pinned weight hash is checked before execution; file presence alone does not establish planner capability.
 
 ## Technology
 
-| Layer | Open-source tools | Role |
+| Layer | Tools | Purpose |
 |---|---|---|
-| Browser | [Playwright Python](https://github.com/microsoft/playwright-python), [browser-use](https://github.com/browser-use/browser-use) | Controlled Chromium actions and semantic grounding |
-| Planning | [smolagents](https://github.com/huggingface/smolagents), [llama.cpp](https://github.com/ggml-org/llama.cpp), local Qwen | Bounded agent tools and local inference |
-| Runtime/API | Python, Pydantic, FastAPI, uvicorn | Persona budgets, cohorts and local APIs |
-| Storage/traces | DuckDB, OpenTelemetry | Local structured evidence and execution records |
-| Review | FastAPI/local HTML/CSS/JavaScript; Streamlit/Plotly for cohorts | Assessment dashboard, comparisons and offline exports |
-| Desktop/keys | Tkinter/ttk, keyring, PyInstaller | Native launcher, OS credential storage and Windows packaging |
-| Evaluation | [Mind2Web](https://huggingface.co/datasets/osunlp/Mind2Web), owned fixtures | Reference scoring and controlled acceptance |
-| Delivery | GitHub, uv; optional static hosting | Source downloads and reproducible phase gates |
+| Browser | [Playwright Python](https://github.com/microsoft/playwright-python), [browser-use](https://github.com/browser-use/browser-use) | Chromium automation and semantic grounding |
+| Agents | [smolagents](https://github.com/huggingface/smolagents), Pydantic | Restricted planning tools, action validation and execution budgets |
+| Local inference | [llama.cpp](https://github.com/ggml-org/llama.cpp), [Qwen3 GGUF](https://huggingface.co/Qwen/Qwen3-4B-GGUF) | Optional CPU planner |
+| Local service | FastAPI, uvicorn, HTTPX | Authenticated loopback dashboard and bounded provider transport |
+| Evidence | DuckDB, OpenTelemetry | Local cohort records and traces |
+| Review | HTML/CSS/JavaScript; optional Streamlit/Plotly | Assessment workspace and cohort analysis |
+| Desktop | Tkinter, keyring, PyInstaller | Native launcher, credential storage and Windows packaging |
+| Evaluation | Owned fixtures, [Mind2Web](https://huggingface.co/datasets/osunlp/Mind2Web) | Controlled acceptance and reference diagnostics |
 
-Mind2Web reference scores are separate from actual planner evaluation. Optional vision and Phoenix integration should be checked against the implementation plan; neither is required for report review. Dependencies, models and datasets retain their own licenses.
+Vision models and Phoenix are optional integrations, not prerequisites for the current assessment workflow. Dependencies, models and datasets retain their own licenses.
 
-## Development and roadmap
+## Project status and contribution
 
-[Phase 10](docs/phase10-local-product.md) records local CLI distribution and BYOK implementation/verification. The [implementation plan](IMPLEMENTATION_PLAN.md) records Phase 15's local preflight and still-open external-replica gate, Phase 16's qualified local Morpheus connection, and Phase 17's local pilots. Optional hosted deployment, including any Supabase integration, is deferred to the final Phase 18. The existing GitHub Pages landing is informational; assessments and reports stay local.
+The offline assessment, Windows launcher and bundled-fixture execution/export milestones have acceptance evidence in the [implementation plan](IMPLEMENTATION_PLAN.md). External replica preparation, real-model qualification of the new dashboard path and broader interactive pilots remain open. Hosted deployment is the final deferred phase; Supabase is not required for local use.
 
-Acceptance runs once after construction; rerun affected failures only. See [CONTRIBUTING](CONTRIBUTING.md), [SECURITY](SECURITY.md) and the [implementation plan](IMPLEMENTATION_PLAN.md). Project code is licensed under [MIT](LICENSE); third-party components retain their notices.
-
-The owned-fixture release gate passed: 265 distinct regression cases, healthy real checkout 3/3 completed, with a reviewed partial defect baseline that excludes two planner faults. The offline assessment and Windows desktop gates also passed. FrictionLab 0.1.0 is a public development release with explicit offline and owned-fixture limits. See [Phase 11 results and remaining work](docs/phase11-validation.md) and [release operations](docs/phase11-release.md).
+Acceptance runs after construction, with affected checks repeated only when a repair warrants it. See [CONTRIBUTING](CONTRIBUTING.md) for development and [SECURITY](SECURITY.md) for vulnerability reporting. FrictionLab is licensed under [MIT](LICENSE).

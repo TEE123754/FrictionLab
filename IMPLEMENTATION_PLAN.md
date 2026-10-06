@@ -3,7 +3,7 @@
 **Product:** Autonomous, multi-agent behavioral testing for staging web applications.  
 **Architecture:** Python application running locally, with an interactive dashboard and exportable reports.  
 **Cost constraint:** Local execution with no required subscription or cloud compute. Agent testing requires a configured AI model: the user's own eligible API key or an explicitly configured local model. Preserve a no-paid-API local option; paid providers require explicit opt-in and spending limits.
-**Document date:** October 5, 2026 (Asia/Kuala_Lumpur).
+**Document date:** October 6, 2026 (Asia/Kuala_Lumpur).
 **Status:** Phases 0–14 are complete for their declared fixture, offline, Windows desktop and public distribution gates. Runtime execution remains local. Phase 15 preparation exists, but user-supplied repo/replica execution remains blocked pending its independent isolation gate. Phase 16's local Morpheus connection/report-boundary gate passed; its newly required agent-planner integration is pending. Phase 17's offline assessment pilot, package and first-run subset passed; its unified agent-first onboarding and required interactive pilots remain open. Phase 18 remains the final, deferred hosted-deployment phase. Existing static checks, API connection checks and fixture results do not establish completion of the primary agent workflow. The public source, downloads and static landing page do not host assessments or user data.
 
 ## 1. Intended outcome
@@ -32,7 +32,7 @@ Both entry points must reach the same local run workspace and engine:
 | Terminal | Install and run `uv run frictionlab start` → open the localhost dashboard → connect the user's AI provider/model or configured local model → provide a repository/local source copy or isolated website → prepare and validate the test environment → choose goals and personas → run agents → review/export the detailed report |
 | Windows desktop | Download/extract and open `FrictionLab.exe` → connect the user's AI provider/model or configured local model → start/open the local dashboard → follow the same target, environment, goal, agent and report flow |
 
-These are planned end-to-end agent flows. The current CLI/desktop launches the static assessment workspace; arbitrary repo/website agent execution is not yet available.
+The current CLI/desktop shares a fixture-agent and static assessment workspace. Arbitrary repo/website agent execution remains unavailable. The complete user-supplied application flow above is still planned.
 
 - **AI user testing (primary):** Requires a working planner model and verified interactive environment before execution. BYOK is the default onboarding path; a configured local model is an alternative. A missing key alone is acceptable only when the selected local model is ready. If no planner is available, block the agent run with actionable setup guidance and a prerequisite report.
 - **Static assessment (supporting):** Keep URL/snapshot structural, accessibility and viewport checks as a separately labeled mode. It works without AI; optional AI advice remains available. Static evidence cannot establish task completion, cognitive friction or agent abandonment.
@@ -1003,6 +1003,8 @@ The consolidated [initial CI run](https://github.com/TEE123754/FrictionLab/actio
 
 **Fixture execution receipt — October 5:** Strengthened admission acceptance from mocked runner calls to the authenticated dashboard API → bounded cloud adapter with a scripted response transport → real Chromium/Playwright/browser-use fixture actions → terminal report, screenshot retrieval and ZIP export. The [first affected run](https://github.com/TEE123754/FrictionLab/actions/runs/37333073964) passed Linux; its extracted Windows journey exposed a console-formatter error at fixture-server startup. Repairs keep agent start/cancel on the server event loop, bundle the fixture web files and required package metadata, and disable Uvicorn console formatters in the windowed executable. ZIP exports now include every referenced screenshot/annotation and action/DOM evidence and fail explicitly if a referenced file is unavailable; the dashboard previews PNG screenshots rather than attempting unsupported SVG previews. The [final affected gate](https://github.com/TEE123754/FrictionLab/actions/runs/37333955041) passed **8/8 Phase 17 Linux cases**, installed-wheel/export/archive acceptance, Windows native tests and extracted executable offline/agent smoke. Both source and frozen executable completed the healthy fixture and recorded grounded patience abandonment for the dead-button fixture, with zero sentinel requests, unchanged sentinel data and fixture cleanup. The scripted response transport made **zero real or paid inference requests**. Terminal screenshots and report diagnoses were reviewed; final Linux evidence is retained under ignored `artifacts/phase17/ci-37333955041/`. This closes the fixture-only execution/export milestone, while real-model capability, local-planner qualification, supported external repo preparation and the required external interactive pilots remain open. No new public release or deployment was made.
 
+**Local follow-up — October 6 (construction complete; acceptance pending):** Added explicit dashboard selection of already prepared local llama.cpp/Qwen3 resources, with CPU/memory acknowledgement and no download or launch during selection. Default local configuration is not admitted without explicit selection. Readiness distinguishes resource presence from hash/capability verification; the existing runtime verifies pinned weights before launch. The decision ceiling now also bounds local planner steps/tool calls. Report review exposes findings/remediation/evidence, action timings, friction and planner outcomes. Cancellation/restart regenerates partial report exports with the terminal status while preserving already completed results. Rewrote README for product/engineering audiences with clear setup, development versus release distinction, evidence scope, cost/privacy and safety boundaries. End-of-construction acceptance is pending; no model was installed or started on the operator laptop and no paid request was made.
+
 ## Phase 18 — Optional hosted deployment (DEFERRED; FINAL PHASE)
 
 **Boundary:** The tool stays local through Phases 15–17. The public GitHub Pages site is informational only; it is not an assessment service. No cloud runtime, user target URL, report or credential is deployed as part of the current plan. Hosted execution is a separate product and security decision, not required to use the CLI or desktop app.
@@ -1036,13 +1038,23 @@ Additional static categories, providers and hosted features do not close this mi
 - [x] Phase 12 — Simple local assessment workspace (51 initial passes; 3/3 affected and installed-wheel acceptance; report and screenshot reviewed)
 - [x] Phase 13 — Native desktop and downloadable distribution (Windows native 2/2; extracted executable offline smoke and checksum passed)
 - [x] Phase 14 — Public open-source distribution and product landing (public MIT repo/release and Pages landing/sample; archive digests and HTTP 200 checked)
-- [ ] Phase 15 — Repo setup and isolated-replica journeys (declaration/preflight 2/2 preserved; supported repo preparation, execution boundary and cohort gate open)
-- [ ] Phase 16 — AI planner integration and agent report reliability (prior Morpheus connection smoke and 8/8 focused checks complete; interactive BYOK/local planner gate pending)
+- [ ] Phase 15 — Repo setup and isolated-replica journeys
+  - [x] Zero-contact declaration/preflight and actionable blocked report (2/2 acceptance)
+  - [x] Bundled-fixture-only admission preserved, per operator instruction
+  - [ ] Supported external repo preparation and independently verified runtime/data/integration boundary
+  - [ ] External healthy/defect cohort acceptance (requires a permissioned disposable replica)
+- [ ] Phase 16 — AI planner integration and agent report reliability
+  - [x] Morpheus connection smoke, secure key/policy integration and focused boundary checks (8/8)
+  - [x] Shared restricted planner dispatch, explicit budgets, provider faults and evidence ZIP (scripted-provider fixture gate)
+  - [ ] Prepared local planner selection, local decision ceilings and consistent partial exports (built October 6; acceptance pending)
+  - [ ] Real selected-model dashboard journey and partial-fault qualification (requires additional authorized inference or optional local-model acceptance)
 - [ ] Phase 17 — Unified agent-first CLI/desktop workflow, interactive pilots and release readiness
   - [x] Offline assessment pilot, first-run diagnostics, report/export review and CI package subset (October 5 checkpoint)
   - [x] Shared fixture-only agent panel, readiness/usage gate and partial-report API (development branch)
   - [x] Admitted source and frozen Windows fixture journeys, healthy/defect outcomes and complete evidence ZIP (scripted provider; final affected gate)
-  - [ ] Supported isolated interactive replicas, model-driven agent journeys and both-interface acceptance
+  - [ ] Expanded readable journey review and professional product README (built October 6; acceptance pending)
+  - [ ] Supported isolated interactive replicas, real-model agent journeys and both-interface acceptance
+  - [ ] New public local release after all required gates pass (v0.1.0 predates agent panel)
 - [ ] Phase 18 — Optional hosted deployment (last phase; deferred)
 
 Update a checkbox only after completing its phase and its consolidated boundary checks.

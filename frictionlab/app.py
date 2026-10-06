@@ -29,6 +29,11 @@ class Connection(BaseModel):
     use_local_env: bool = False
 
 
+class LocalPlannerSelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    resource_usage_acknowledged: bool = False
+
+
 def connect(root, value):
     settings = InferenceSettings(
         provider=value.provider,
@@ -150,6 +155,13 @@ def create_app(root, port, *, token=None):
     def configure(value: Connection):
         connect(root, value)
         return {"connected": True, "storage": "native_os" if value.remember else "process_memory"}
+
+    @app.post("/api/settings/local")
+    def select_local(value: LocalPlannerSelection):
+        if not value.resource_usage_acknowledged or not agents.local_resources()["available"]:
+            raise ValueError("Prepare optional local resources and acknowledge CPU/memory usage first")
+        save_settings(root, InferenceSettings(model="Qwen3-4B-Q4_K_M"))
+        return {"provider": "local", "downloads_started": False, "model_started": False}
 
     @app.get("/api/agents/readiness")
     def agent_readiness():

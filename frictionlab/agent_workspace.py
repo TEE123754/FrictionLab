@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import io
 import json
+import os
 import re
 import uuid
 import zipfile
@@ -15,8 +16,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from frictionlab.assessment.render import browser_path
 from frictionlab.assessment.service import read_settings
-from frictionlab.configuration import CONFIG_DIRECTORY, read_json, resolve_run
-from frictionlab.contracts.models import ExecutionStatus
+from frictionlab.configuration import CONFIG_DIRECTORY, ROOT, read_json, resolve_run
+from frictionlab.contracts.models import ExecutionStatus, ReportStatus, RunReport
 from frictionlab.credentials import get_key
 from frictionlab.planning.contracts import load_limits
 from frictionlab.planning.runner import run_persona
@@ -121,7 +122,11 @@ class AgentWorkspace:
         if not browser:
             gaps.append("Install Chrome/Edge/Chromium or set FRICTIONLAB_BROWSER_PATH.")
         if settings.provider == "local":
-            gaps.append("Connect a supported BYOK model; optional local planner resources have not been qualified for this dashboard.")
+            resources = self.local_resources()
+            if settings.model != resources["model"]:
+                gaps.append("Explicitly select the prepared local planner in this workspace first.")
+            if not resources["available"]:
+                gaps.append("Connect a BYOK provider or explicitly prepare the pinned local runtime and model; no downloads are automatic.")
         elif not get_key(settings.provider):
             gaps.append("Connect the selected provider key in this local workspace.")
         return {
@@ -129,11 +134,29 @@ class AgentWorkspace:
             "browser_available": bool(browser),
             "provider": settings.provider,
             "model": settings.model,
-            "planner_contract": "bounded JSON action adapter; selected model capability unverified until a real decision",
+            "planner_contract": "restricted local choice adapter" if settings.provider == "local" else "bounded JSON action adapter",
+            "capability_verified": False,
+            "local_resources": self.local_resources(),
             "ready_to_attempt": not gaps,
             "gaps": gaps,
             "external_replica_enabled": False,
             "network_requests": 0,
+        }
+
+    def local_resources(self) -> dict:
+        """Existence-only preflight. Runtime verifies the pinned weight hash before launch."""
+        manifest = read_json(CONFIG_DIRECTORY / "resource-manifest.json")
+        runtime_key = "runtime" if os.name == "nt" else "runtime_linux"
+        paths = [
+            (ROOT / manifest[key]["local_path"].replace("\\", "/")).resolve()
+            for key in (runtime_key, "model")
+        ]
+        return {
+            "available": all(path.is_file() for path in paths),
+            "integrity_verified": False,
+            "downloads_started": False,
+            "model": "Qwen3-4B-Q4_K_M",
+            "note": "Optional resources require explicit setup. Weight integrity is checked before launch; readiness does not prove planning capability.",
         }
 
     def blocked(
@@ -145,6 +168,20 @@ class AgentWorkspace:
         ).model_copy(update={"run_id": uuid.UUID(id)})
         write_report(report, self.root, prepared_directory=True, output_directory=self.path(id))
         self.progress(id, str(terminal_status), reason)
+
+    def retain_terminal(self, id: str, status: ExecutionStatus, reason: str) -> None:
+        report = RunReport.model_validate(self.report(id))
+        # A completed report may have been saved just before cancellation or process exit.
+        if report.execution_status == ExecutionStatus.COMPLETED:
+            self.progress(id, str(report.execution_status), "Completed report retained")
+            return
+        report = report.model_copy(update={
+            "execution_status": status,
+            "report_status": ReportStatus.PARTIAL,
+            "terminal_reason": reason,
+        })
+        write_report(report, self.root, prepared_directory=True, output_directory=self.path(id))
+        self.progress(id, str(status), reason)
 
     def submit(self, request: AgentRequest) -> str:
         if sum(not task.done() for task in self.tasks.values()) >= 2:
@@ -159,9 +196,6 @@ class AgentWorkspace:
         if settings.provider == "morpheus" and not request.account_usage_acknowledged:
             self.blocked(id, "Acknowledge this run's potential Morpheus charges before starting.")
             return id
-        if settings.provider == "local":
-            self.blocked(id, "No qualified local dashboard planner is configured.")
-            return id
         self.progress(id, "queued", "Waiting for the local agent worker")
         self.tasks[id] = asyncio.create_task(self.execute(id, request, settings))
         return id
@@ -174,7 +208,11 @@ class AgentWorkspace:
                 configuration["id"] = id
                 resolved = resolve_run(configuration)
                 limits = load_limits().model_copy(
-                    update={"max_runtime_seconds": request.max_runtime_seconds}
+                    update={
+                        "max_runtime_seconds": request.max_runtime_seconds,
+                        "max_steps": request.max_requests,
+                        "max_tool_calls": request.max_requests,
+                    }
                 )
                 bounded = settings.model_copy(
                     update={
@@ -198,7 +236,7 @@ class AgentWorkspace:
                 self.progress(id, str(broker.report.execution_status), "Report and evidence saved")
         except asyncio.CancelledError:
             if (self.path(id) / "report.json").is_file():
-                self.progress(id, "cancelled", "Partial report retained after cancellation")
+                self.retain_terminal(id, ExecutionStatus.CANCELLED, "Partial report retained after cancellation")
             else:
                 self.blocked(
                     id,
@@ -207,7 +245,7 @@ class AgentWorkspace:
                 )
         except Exception as exc:  # noqa: BLE001 -- terminal jobs must retain a report
             if (self.path(id) / "report.json").is_file():
-                self.progress(id, "failed", f"Agent stopped ({type(exc).__name__}); report retained")
+                self.retain_terminal(id, ExecutionStatus.FAILED, f"Agent stopped ({type(exc).__name__}); report retained")
             else:
                 self.blocked(id, f"Agent failed before execution ({type(exc).__name__}).")
 
@@ -225,7 +263,7 @@ class AgentWorkspace:
                 state = self.status(entry.name)
                 if state["status"] in {"queued", "running"}:
                     if (entry / "report.json").is_file():
-                        self.progress(entry.name, "interrupted", "Saved report retained after restart")
+                        self.retain_terminal(entry.name, ExecutionStatus.INTERRUPTED, "Saved report retained after restart")
                     else:
                         self.blocked(
                             entry.name,

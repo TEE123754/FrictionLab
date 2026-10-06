@@ -105,11 +105,58 @@ def test_fixture_job_passes_request_budget_and_preserves_report(tmp_path, monkey
         assert observed["inference"].max_requests == 3
         assert observed["inference"].max_runtime_seconds == 60
         assert observed["limits"].max_runtime_seconds == 60
+        assert observed["limits"].max_steps == 3
+        assert observed["limits"].max_tool_calls == 3
         assert observed["behavioral"] is True
         assert observed["variant"] == "dead_button"
         await workspace.close()
 
     asyncio.run(run())
+
+
+def test_local_planner_requires_explicit_selection_without_starting_model(tmp_path, monkeypatch):
+    monkeypatch.setattr(AgentWorkspace, "local_resources", lambda self: {
+        "available": True, "model": "Qwen3-4B-Q4_K_M",
+        "integrity_verified": False, "downloads_started": False,
+    })
+    monkeypatch.setattr(agent_workspace, "browser_path", lambda: "synthetic-browser")
+    app = create_app(tmp_path, 8765, token="synthetic-token")
+
+    async def run():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1:8765",
+            headers={"x-frictionlab-token": "synthetic-token"},
+        ) as client:
+            assert not (await client.get("/api/agents/readiness")).json()["ready_to_attempt"]
+            assert (await client.post("/api/settings/local", json={})).status_code == 400
+            response = await client.post("/api/settings/local", json={"resource_usage_acknowledged": True})
+            assert response.status_code == 200
+            assert response.json()["model_started"] is False
+            ready = (await client.get("/api/agents/readiness")).json()
+            assert ready["ready_to_attempt"] is True
+            assert ready["capability_verified"] is False
+            assert ready["local_resources"]["integrity_verified"] is False
+            monkeypatch.setattr(AgentWorkspace, "local_resources", lambda self: {
+                "available": False, "model": "Qwen3-4B-Q4_K_M",
+            })
+            assert not (await client.get("/api/agents/readiness")).json()["ready_to_attempt"]
+            assert (await client.post("/api/settings/local", json={"resource_usage_acknowledged": True})).status_code == 400
+        await app.state.agents.close()
+        await app.state.assessments.close()
+    asyncio.run(run())
+
+
+def test_restart_updates_partial_report_and_exports(tmp_path):
+    workspace = AgentWorkspace(tmp_path)
+    id = str(__import__("uuid").uuid4())
+    workspace.path(id).mkdir()
+    workspace.blocked(id, "Synthetic report saved before restart")
+    workspace.progress(id, "running", "Synthetic interrupted worker")
+    recovered = AgentWorkspace(tmp_path)
+    assert recovered.status(id)["status"] == "interrupted"
+    assert recovered.report(id)["execution_status"] == "interrupted"
+    assert recovered.report(id)["report_status"] == "partial"
+    assert b"Saved report retained after restart" in (recovered.path(id) / "report.md").read_bytes()
 
 
 def test_cancelled_job_retains_partial_report(tmp_path, monkeypatch):
